@@ -22,6 +22,7 @@
 
 
 <script>
+  var new_times = []
   /* Function to return the current day*/
     var curday = function(sp){
       today = new Date();
@@ -110,20 +111,17 @@
 
       };
 
+      function parse_iso(iso_time){
+        return String(iso_time).slice(0,-5);
+      };
+
 
       let data = JSON.parse(JSON.stringify(allRecordsForObject));
       let people = []
       events = []
       var c = 0;
       for (let d of data.entries()){ // Construct the JSON payload for the calendar
-        // console.log(d[1])
-        console.log("Scheduled From "+String(d[1].field_58_raw.iso_timestamp).slice(0,-5))
-        console.log("Scheduled To "+d[1].field_58_raw.to.iso_timestamp)
-        console.log("Actual From "+d[1].field_67_raw.iso_timestamp)
-        console.log("Actual To "+d[1].field_67_raw.to.iso_timestamp)
-
-
-        people.push({id: d[1].field_57, //Field_57 is the name
+        people.push({id: d[1].id, //Field_57 is the name
                     title: d[1].field_57,
                     children: [{
                         id: d[1].field_57 + '_Scheduled',
@@ -137,17 +135,19 @@
                     })
         events.push({id: String(c) + '_Scheduled',
                     resourceId: d[1].field_57 + '_Scheduled',
-                    start: String(d[1].field_58_raw.iso_timestamp).slice(0,-5),//Field_58 is the scheduled time
-                    end: String(d[1].field_58_raw.to.iso_timestamp).slice(0,-5),
+                    start: parse_iso(d[1].field_58_raw.iso_timestamp),//Field_58 is the scheduled time. Use slice to get rid of '.000Z'
+                    end: parse_iso(d[1].field_58_raw.to.iso_timestamp),
                     title: d[1].field_61, // Field_61 is the title (whats displayed inside the bar)
-                    color:'#7FFF00'
+                    color:'#7FFF00',
+                    record_id:d[1].id
                     })
         events.push({id: String(c) + '_Actual',
                     resourceId: d[1].field_57 + '_Actual', 
-                    start: String(d[1].field_67_raw.iso_timestamp).slice(0,-5), //Field_67 is the actual time
-                    end: String(d[1].field_67_raw.to.iso_timestamp).slice(0,-5),
+                    start: parse_iso(d[1].field_67_raw.iso_timestamp), //Field_67 is the actual time
+                    end: parse_iso(d[1].field_67_raw.to.iso_timestamp),
                     title: d[1].field_61,
-                    color: '#FF0000'
+                    color: '#FF0000',
+                    record_id:d[1].id
                     })
         c += 1;
       }
@@ -168,7 +168,7 @@
         now: '2019-05-04',
         editable: true, // enable draggable events
         aspectRatio: 2.0,
-        scrollTime: '06:00', // undo default 6am scrollTime
+        scrollTime: '08:00', // undo default 6am scrollTime
         // minTime: '06:00:00',
         // maxTime: '15:00:00',
         header: {
@@ -199,9 +199,11 @@
         },
         eventDrop: function (info) {
           $('#save').attr("disabled", false);
-          console.log(info.event.id + " start is now " + info.event.start.toISOString());
-          console.log(info.event.id + " end is now " + info.event.end.toISOString());
-
+          if (info.event.id.includes('_Actual')){
+            console.log(`${info.event.title} actual time is now from ${parse_iso(info.event.start.toISOString())} to ${parse_iso(info.event.end.toISOString())}`)
+          } else{
+            console.log(`${info.event.title} scheduled time is now from ${parse_iso(info.event.start.toISOString())} to ${parse_iso(info.event.end.toISOString())}`)
+          }
         }
     });
 
@@ -212,6 +214,28 @@
     getAllRecordsForObject('scene_7', 'view_69', handleData);
     $( "#save" ).click(function() {
         console.log( "Handler for .click() called." );
+        var url = 'https://api.knack.com/v1/pages/scene_1/views/view_2/records/';
+        var headers = {
+          'X-Knack-Application-ID': '5c93c4d50fbcdf5726ae5439',
+          'X-Knack-REST-API-Key':'e46f6190-4bfb-11e9-9d62-3b671224caf2',
+          'content-type':'application/json'
+        };
+        // use data from inserted record
+        var data = {
+          field_1: [record.record_id], // connection field
+          field_2: record.field_3
+        }
+        // insert the record
+        $.ajax({
+          url: url,
+          type: 'PUT',
+          headers: headers,
+          data: data,
+          success: function(response) {
+            alert('Record Added!');
+            Knack.hideSpinner();
+          }
+        });
         $('#save').attr("disabled", true);
       });
   });
