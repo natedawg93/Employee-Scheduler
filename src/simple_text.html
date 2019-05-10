@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8' />
+<link href='../packages/core/main.css' rel='stylesheet' />
+<link href='../packages/daygrid/main.css' rel='stylesheet' />
+<link href='../packages/timegrid/main.css' rel='stylesheet' />
+<link href='../packages/list/main.css' rel='stylesheet' />
+<link href='../packages/timeline/main.css' rel='stylesheet' />
+<link href='../packages/resource-timeline/main.css' rel='stylesheet' />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+<script src='../packages/core/main.js'></script>
+<script src='../packages/interaction/main.js'></script>
+<script src='../packages/daygrid/main.js'></script>
+<script src='../packages/timegrid/main.js'></script>
+<script src='../packages/list/main.js'></script>
+<script src='../packages/timeline/main.js'></script>
+<script src='../packages/resource-common/main.js'></script>
+<script src='../packages/resource-timeline/main.js'></script>
+
+
+<script>
+  /* Function to return the current day*/
+    var curday = function(sp){
+      today = new Date();
+      var dd = today.getDate();
+      var mm = today.getMonth()+1; //As January is 0.
+      var yyyy = today.getFullYear();
+
+      if(dd<10) dd='0'+dd;
+      if(mm<10) mm='0'+mm;
+      return (mm+sp+dd+sp+yyyy);
+    };
+
+   
+    /* Function to get all the records for an object*/
+    function getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData, currentPage = 1, totalPages, allRecordsForObject = []) {
+      if (!sceneKey || !viewKey) {
+        throw new Error('Missing scene or view key!');
+      }
+
+      if (!callbackFunctionToHandleData) {
+        throw new Error('No callback function provided; make sure the data is handled somehow.');
+      }
+
+      // AJAX prep
+      var url = 'https://api.knack.com/v1/pages/' + sceneKey + '/views/' + viewKey + '/records?page=' + currentPage + '&rows_per_page=1000';
+      var headers = {
+        'X-Knack-Application-ID': '5c93c4d50fbcdf5726ae5439',
+        'X-Knack-REST-API-Key': 'e46f6190-4bfb-11e9-9d62-3b671224caf2'
+      };
+
+      $.ajax({
+        url: url,
+        headers: headers,
+        type: 'GET',
+      }).done(function(responseData) {
+        allRecordsForObject = allRecordsForObject.concat(responseData.records);
+        // Recursively continue getting records until we have all of them
+        if (currentPage < responseData.total_pages) {
+          currentPage++;
+          getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData, currentPage, responseData.total_pages, allRecordsForObject);
+          return;
+        }
+        // Handle ALL records with our callback function
+        callbackFunctionToHandleData(allRecordsForObject);
+      });
+    };
+
+    /* Function to handle the data*/
+    function handleData(allRecordsForObject) {
+
+      const convertTime12to24 = (time12h) => {
+        time_regex = /^(\d+:\d+)(am|pm)/g
+        let time_list = time_regex.exec(time12h)
+        let time = time_list[1]
+        let modifier = time_list[2]
+
+        let [hours, minutes] = time.split(':');
+
+        if (hours === '12') {
+          hours = '00';
+        }
+
+        if (modifier === 'pm') {
+          hours = parseInt(hours, 10) + 12;
+        }
+
+        return `${hours}:${minutes}`;
+      }
+
+    /* Function to parse the time in a format readable by the calendar object*/
+
+      function parse_time(time_string){
+        // String format is 05/03/2019 9:50am to 12:50pm
+        var date_regex = /(\d{2}\/\d{2}\/\d{4})/g; // Regex that will get the date from the string
+        var time_regex = /(\d{1,2}:\d{1,2}(am|pm)) to (\d{1,2}:\d{1,2}(am|pm))/g; // Regex to get the time from the string
+
+        var date = date_regex.exec(time_string)[0]; // Get the 0th element of the regex match which is the date alone
+        var times = time_regex.exec(time_string); // times[1] is the start time and times[3] is the end time
+        var date = new Date(date.replace(/\//g,'-')).toISOString().substr(0, 10); // Convert the / to -
+        if (times != null){
+          return [date + 'T' + convertTime12to24(times[1]),date + 'T' + convertTime12to24(times[3])]; // Convert the time to a format readable by the calendar
+          // format is yyyy-mm-ddT24hHH:MM
+        }else{
+          return date;
+        }
+
+      };
+
+
+      let data = JSON.parse(JSON.stringify(allRecordsForObject));
+      let people = []
+      events = []
+      var c = 0;
+      for (let d of data.entries()){ // Construct the JSON payload for the calendar
+        people.push({id: d[1].field_57, //Field_57 is the name
+                    title: d[1].field_57,
+                    children: [{
+                        id: d[1].field_57 + '_Scheduled',
+                        title: 'Scheduled',
+                      },
+                      {
+                        id: d[1].field_57 + '_Actual',
+                        title: 'Actual',
+                      }
+                    ]
+                    })
+        events.push({id: String(c) + '_Scheduled',
+                    resourceId: d[1].field_57 + '_Scheduled',
+                    start: parse_time(d[1].field_58)[0],//Field_58 is the scheduled time
+                    end: parse_time(d[1].field_58)[1],
+                    title: d[1].field_61, // Field_61 is the title (whats displayed inside the bar)
+                    color:'#7FFF00'
+                    })
+        events.push({id: String(c) + '_Actual',
+                    resourceId: d[1].field_57 + '_Actual', 
+                    start: parse_time(d[1].field_67)[0], //Field_67 is the actual time
+                    end: parse_time(d[1].field_67)[1],
+                    title: d[1].field_61,
+                    color: '#FF0000'
+                    })
+        c += 1;
+      }
+      // events.push({id:'0',eventColor:'red'})
+      //  $.each(events,function(i,v){       
+      //   if (v.id.includes('.*_Actual')) {
+      //     v.eventColor = 'red'
+      // }
+      // });
+      console.log([JSON.parse(JSON.stringify(people))])
+      console.log([JSON.parse(JSON.stringify(events))])
+
+      var calendarEl = document.getElementById('calendar');
+      // var actual_dom = document.querySelectorAll('[id="_Actual"]');
+      // actual_dom.style.backgroundColor = 'green';
+      var calendar = new FullCalendar.Calendar(calendarEl, {
+        plugins: [ 'interaction', 'dayGrid', 'timeGrid', 'list', 'resourceTimeline' ],
+        now: '2019-05-04',
+        editable: true, // enable draggable events
+        aspectRatio: 2.0,
+        scrollTime: '06:00', // undo default 6am scrollTime
+        // minTime: '06:00:00',
+        // maxTime: '15:00:00',
+        header: {
+          left: 'today prev,next',
+          center: 'title',
+          right: 'resourceTimelineDay,resourceTimelineThreeDays,timeGridWeek,dayGridMonth,listWeek'
+        },
+        defaultView: 'resourceTimeline',
+        views: {
+          resourceTimeline: {
+            type: 'resourceTimeline',
+            duration: { hours: 8 },
+            buttonText: '15 minutes'
+          }
+        },
+        resourceLabelText: 'People',
+        resources:  [JSON.parse(JSON.stringify(people))][0],
+        events: [JSON.parse(JSON.stringify(events))][0],
+        eventDragStart: function (info) {
+            $('#save').attr("disabled", false);
+            console.log('DRAG START ' + info.event.title);
+            console.log(this);
+        },
+        eventDragStop: function (info) {
+            $('#save').attr("disabled", false);
+            console.log('DRAG STOP ' + info.event.title);
+            console.log(this);
+        },
+        eventDrop: function (info) {
+          $('#save').attr("disabled", false);
+          console.log(info.event.id + " start is now " + info.event.start.toISOString());
+          console.log(info.event.id + " end is now " + info.event.end.toISOString());
+
+        }
+    });
+
+    calendar.render();
+  };
+
+  $(document).ready(function() {
+    getAllRecordsForObject('scene_7', 'view_69', handleData);
+    $( "#save" ).click(function() {
+        console.log( "Handler for .click() called." );
+        $('#save').attr("disabled", true);
+      });
+  });
+
+
+</script>
+<style>
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+    font-size: 14px;
+  }
+
+  #calendar {
+    max-width: 900px;
+    margin: 50px auto;
+  }
+  #save, #cancel{
+    display: table;
+    margin: auto;
+    margin-top: 10px;
+  }
+  .fc-content{
+    color: #000;
+  }
+
+</style>
+</head>
+<body>
+
+  <div id='calendar'></div>
+  <div class="container">
+      <button type="button" class="btn btn-primary" id="save" disabled>Save</button>
+      <button type="button" class="btn btn-light" id="cancel">Cancel</button>
+  </div>
+
+</body>
+</html>
+
+
