@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Table From Knack</title>
+	<meta charset='utf-8' />
+	<link href="https://unpkg.com/tabulator-tables@4.2.7/dist/css/tabulator.min.css" rel="stylesheet">
+	<script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.2.7/dist/js/tabulator.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.4.1.js"></script> <!--jquery cdn-->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"> <!--bootstrap css-->
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script> <!--bootstrap js-->
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js'></script> <!--moment js-->
+</head>
+<body>
+	<form id="date-range">
+		From:
+		<input type="date" name="from" min="2015-01-01" id="from"><br><br>
+		To:
+		<input type="date" name="to" min="2015-01-01" id="to"><br><br>
+		<button type="button" class="btn btn-primary" id="date-submit">Submit</button>
+	</form>
+	<div id="example-table"></div>
+
+	<script type="text/javascript">
+		function getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData, currentPage = 1, totalPages, allRecordsForObject = []) {
+		  if (!sceneKey || !viewKey) {
+		    throw new Error('Missing scene or view key!');
+		  }
+
+		  if (!callbackFunctionToHandleData) {
+		    throw new Error('No callback function provided; make sure the data is handled somehow.');
+		  }
+
+		  // AJAX prep
+		  var url = 'https://api.knack.com/v1/pages/' + sceneKey + '/views/' + viewKey + '/records?page=' + currentPage + '&rows_per_page=1000';
+		  var headers = {
+		    'X-Knack-Application-ID': '5c93c4d50fbcdf5726ae5439',
+		    'X-Knack-REST-API-Key': 'e46f6190-4bfb-11e9-9d62-3b671224caf2'
+		  };
+
+		  $.ajax({
+		    url: url,
+		    headers: headers,
+		    type: 'GET',
+		  }).done(function(responseData) {
+		    allRecordsForObject = allRecordsForObject.concat(responseData.records);
+		    // Recursively continue getting records until we have all of them
+		    if (currentPage < responseData.total_pages) {
+		      currentPage++;
+		      getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData, currentPage, responseData.total_pages, allRecordsForObject);
+		      return;
+		    }
+		    // Handle ALL records with our callback function
+		    callbackFunctionToHandleData(allRecordsForObject);
+		  });
+		};	
+
+		function handleData(allRecordsForObject) {
+
+	      function parse_iso(iso_time){
+	        return String(iso_time).slice(0,-5);
+	      };
+
+
+	      let data = JSON.parse(JSON.stringify(allRecordsForObject));
+	      console.log(data);
+	      let people = []
+	      events = []
+	      var c = 0;
+	      for (let d of data.entries()){ // Construct the JSON payload for the calendar
+	        people.push({id: d[1].id, //Field_57 is the name
+	                    title: d[1].field_57,
+	                    children: [{
+	                        id: d[1].field_57 + '_Scheduled',
+	                        title: 'Scheduled',
+	                      },
+	                      {
+	                        id: d[1].field_57 + '_Actual',
+	                        title: 'Actual',
+	                      }
+	                    ]
+	                    })
+	        events.push({id: String(c) + '_Scheduled',
+	                    resourceId: d[1].field_57 + '_Scheduled',
+	                    start: parse_iso(d[1].field_58_raw.iso_timestamp),//Field_58 is the scheduled time. Use slice to get rid of '.000Z'
+	                    end: parse_iso(d[1].field_58_raw.to.iso_timestamp),
+	                    title: d[1].field_61, // Field_61 is the title (whats displayed inside the bar)
+	                    color:'#7FFF00',
+	                    record_id:d[1].id
+	                    })
+	        events.push({id: String(c) + '_Actual',
+	                    resourceId: d[1].field_57 + '_Actual', 
+	                    start: parse_iso(d[1].field_67_raw.iso_timestamp), //Field_67 is the actual time
+	                    end: parse_iso(d[1].field_67_raw.to.iso_timestamp),
+	                    title: d[1].field_61,
+	                    color: '#FF0000',
+	                    record_id:d[1].id
+	                    })
+	        c += 1;
+	      }
+	      console.log([JSON.parse(JSON.stringify(people))])
+	      console.log([JSON.parse(JSON.stringify(events))])
+
+		var tabledata = [
+			    {id:1, name:"Bob", "_children":[
+			        {id:2, name:"Scheduled", hours:"15\n14", d1:"",d2:"",d3:"",d4:"",d5:"",d6:"",d7:""}, 
+			        {id:3, name:"Actual", hours:"42", d1:"",d2:"",d3:"",d4:"",d5:"",d6:"",d7:""},
+			    ]},
+			    {id:4, name:"Nate", "_children":[
+			        {id:5, name:"Scheduled", hours:"10", d1:"",d2:"",d3:"",d4:"",d5:"",d6:"",d7:""}, 
+			        {id:6, name:"Actual", hours:"12", d1:"",d2:"",d3:"",d4:"",d5:"",d6:"",d7:""},
+			    ]},
+			    {id:7, name:"Paden", "_children":[
+			        {id:8, name:"Scheduled", hours:"20", d1:"",d2:"",d3:"",d4:"",d5:"",d6:"",d7:""}, 
+			        {id:9, name:"Actual", hours:"16", d1:"",d2:"",d3:"",d4:"",d5:"",d6:"",d7:""},
+			    ]},
+			];
+		Date.prototype.addDays = function(days) {
+		    var date = new Date(this.valueOf());
+		    date.setDate(date.getDate() + days);
+		    return date;
+		}
+		d = new Date('05/16/19')
+		// console.log(d.getMonth()+'/'+d.getDate())
+		var cols = [];
+		cols.push({title:"Name", field:"name"})
+		cols.push({title:"Hours", field:"hours"})
+
+		var dates_array = []; 
+		var from = new Date($('#from').val());
+		from = from.addDays(1)
+		var to = new Date(from.addDays(6))
+		dates_array.push(new Date(from));
+		for(i=1;i<=6;i++){
+			dates_array.push(new Date(from.addDays(i)));
+		}
+		var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+		var d = new Date('2019-05-09');
+		var dayName = days[d.getDay() + 1];
+
+		dates_array.forEach( function(element, index) {
+			weekday = moment(element).format('dddd')
+			cols.push({title:`${weekday}<br/>${moment(element).format('MM/DD')}`,
+					   field:`d${index+1}`})
+		});
+		console.log(cols)
+
+		var table = new Tabulator("#example-table", {
+			data:tabledata,           //load row data from array
+			layout:"fitColumns",      //fit columns to width of table
+			responsiveLayout:"hide",  //hide columns that dont fit on the table
+			tooltips:true,            //show tool tips on cells
+			addRowPos:"top",          //when adding a new row, add it to the top of the table
+			history:true,             //allow undo and redo actions on the table
+			pagination:"local",       //paginate the data
+			paginationSize:10000000,         //allow 7 rows per page of data
+			dataTree:true,
+			dataTreeStartExpanded:true,
+			initialSort:[             //set the initial sort order of the data
+				{column:"name", dir:"asc"},
+			],
+			columns: cols,
+		});
+	  };
+	  $(document).ready(function() {
+	    // getAllRecordsForObject('scene_7', 'view_69', handleData);
+		$('#date-submit').on('click', function (){
+ 			getAllRecordsForObject('scene_7', 'view_69', handleData);
+		});
+	  });
+	</script>
+	<style type="text/css" media="screen">
+		/*.tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title{
+			white-space: normal;
+			text-overflow: clip;
+		}	*/
+	</style>
+</body>
+</html>
