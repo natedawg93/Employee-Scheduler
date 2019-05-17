@@ -22,7 +22,7 @@
 	<div id="example-table"></div>
 
 	<script type="text/javascript">
-		function getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData, currentPage = 1, totalPages, allRecordsForObject = []) {
+		function getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData,start, end, currentPage = 1, totalPages, allRecordsForObject = []) {
 		  if (!sceneKey || !viewKey) {
 		    throw new Error('Missing scene or view key!');
 		  }
@@ -30,13 +30,13 @@
 		  if (!callbackFunctionToHandleData) {
 		    throw new Error('No callback function provided; make sure the data is handled somehow.');
 		  }
-
 		  // AJAX prep
 		  var url = 'https://api.knack.com/v1/pages/' + sceneKey + '/views/' + viewKey + '/records?page=' + currentPage + '&rows_per_page=1000';
 		  var headers = {
 		    'X-Knack-Application-ID': '5c93c4d50fbcdf5726ae5439',
 		    'X-Knack-REST-API-Key': 'e46f6190-4bfb-11e9-9d62-3b671224caf2'
 		  };
+		  console.log(url)
 
 		  $.ajax({
 		    url: url,
@@ -47,23 +47,45 @@
 		    // Recursively continue getting records until we have all of them
 		    if (currentPage < responseData.total_pages) {
 		      currentPage++;
-		      getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData, currentPage, responseData.total_pages, allRecordsForObject);
+		      getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData, start, end, currentPage, responseData.total_pages, allRecordsForObject);
 		      return;
 		    }
 		    // Handle ALL records with our callback function
-		    callbackFunctionToHandleData(allRecordsForObject);
+		    callbackFunctionToHandleData(allRecordsForObject, start, end);
 		  });
 		};	
 
-		function handleData(allRecordsForObject) {
+		function handleData(allRecordsForObject, start, end) {
 
-	      function parse_iso(iso_time){
-	        return String(iso_time).slice(0,-5);
-	      };
+			function parse_iso(iso_time){
+				return String(iso_time).slice(0,-5);
+			};
+
+			function parseDate(dateStr) {
+				var date = dateStr.split('/');
+				var month = date[0] - 1 ; //January = 0
+				var day = date[1]; 
+				var year = date[2];
+				return new Date(year, day, month); 
+			};
+
+			function filterDate(startDate,endDate,data){
+				var filteredData = [];
+				for(var index in data) {
+				    var obj = data[index];
+				    var date = parseDate(obj.field_58_raw.date);
+
+				    if(date >= startDate && date <= endDate)
+				        filteredData.push(obj);
+	 			}
+	        	return filteredData;
+			}
 
 
-	      let data = JSON.parse(JSON.stringify(allRecordsForObject));
+	      let data = allRecordsForObject;
+	      data = filterDate(start,end,data)
 	      console.log(data);
+
 	      let people = []
 	      events = []
 	      var c = 0;
@@ -98,16 +120,16 @@
 	                    })
 	        c += 1;
 	      }
-	      console.log([JSON.parse(JSON.stringify(people))])
-	      console.log([JSON.parse(JSON.stringify(events))])
+	      // console.log([JSON.parse(JSON.stringify(people))])
+	      // console.log([JSON.parse(JSON.stringify(events))])
 
 		var tabledata = [
 			    {id:1, name:"Bob", "_children":[
-			        {id:2, name:"Scheduled", hours:"15\n14", d1:"",d2:"",d3:"",d4:"",d5:"",d6:"",d7:""}, 
+			        {id:2, name:"Scheduled", hours:[15,14], d1:`Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\nWiping the counters: 12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n`,d2:"",d3:"",d4:"",d5:"",d6:"",d7:"", formatter:"textarea"}, 
 			        {id:3, name:"Actual", hours:"42", d1:"",d2:"",d3:"",d4:"",d5:"",d6:"",d7:""},
 			    ]},
 			    {id:4, name:"Nate", "_children":[
-			        {id:5, name:"Scheduled", hours:"10", d1:"",d2:"",d3:"",d4:"",d5:"",d6:"",d7:""}, 
+			        {id:5, name:"Scheduled", hours:"10", d1:"12:00pm to 2:00pm,\n12:00pm to 2:00pm\n12:00pm to 2:00pm,\n12:00pm to 2:00pm\n12:00pm to 2:00pm,\n12:00pm to 2:00pm\n12:00pm to 2:00pm,\n12:00pm to 2:00pm\n12:00pm to 2:00pm,\n12:00pm to 2:00pm\n12:00pm to 2:00pm,\n12:00pm to 2:00pm\n",d2:"",d3:"",d4:"",d5:"",d6:"",d7:""}, 
 			        {id:6, name:"Actual", hours:"12", d1:"",d2:"",d3:"",d4:"",d5:"",d6:"",d7:""},
 			    ]},
 			    {id:7, name:"Paden", "_children":[
@@ -120,8 +142,6 @@
 		    date.setDate(date.getDate() + days);
 		    return date;
 		}
-		d = new Date('05/16/19')
-		// console.log(d.getMonth()+'/'+d.getDate())
 		var cols = [];
 		cols.push({title:"Name", field:"name"})
 		cols.push({title:"Hours", field:"hours"})
@@ -134,21 +154,18 @@
 		for(i=1;i<=6;i++){
 			dates_array.push(new Date(from.addDays(i)));
 		}
-		var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-		var d = new Date('2019-05-09');
-		var dayName = days[d.getDay() + 1];
-
 		dates_array.forEach( function(element, index) {
 			weekday = moment(element).format('dddd')
 			cols.push({title:`${weekday}<br/>${moment(element).format('MM/DD')}`,
-					   field:`d${index+1}`})
+					   field:`d${index+1}`,
+					   formatter:"textarea"})
 		});
-		console.log(cols)
 
 		var table = new Tabulator("#example-table", {
 			data:tabledata,           //load row data from array
 			layout:"fitColumns",      //fit columns to width of table
 			responsiveLayout:"hide",  //hide columns that dont fit on the table
+			resizableRows:true,
 			tooltips:true,            //show tool tips on cells
 			addRowPos:"top",          //when adding a new row, add it to the top of the table
 			history:true,             //allow undo and redo actions on the table
@@ -159,21 +176,27 @@
 			initialSort:[             //set the initial sort order of the data
 				{column:"name", dir:"asc"},
 			],
-			columns: cols,
+			columns: cols
 		});
 	  };
 	  $(document).ready(function() {
-	    // getAllRecordsForObject('scene_7', 'view_69', handleData);
 		$('#date-submit').on('click', function (){
- 			getAllRecordsForObject('scene_7', 'view_69', handleData);
+			Date.prototype.addDays = function(days) {
+		    var date = new Date(this.valueOf());
+		    date.setDate(date.getDate() + days);
+		    return date;
+		}
+		createDate = (date) => {
+			return moment(date).format('L')
+		}
+			var start = moment($('#from').val());
+			var end = moment(start).add(7,'days')
+ 			getAllRecordsForObject('scene_7', 'view_69', handleData, start = start, end = end);
 		});
 	  });
 	</script>
 	<style type="text/css" media="screen">
-		/*.tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title{
-			white-space: normal;
-			text-overflow: clip;
-		}	*/
+
 	</style>
 </body>
 </html>
