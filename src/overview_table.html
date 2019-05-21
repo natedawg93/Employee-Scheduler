@@ -21,6 +21,65 @@
 	<div id="example-table"></div>
 
 	<script type="text/javascript">
+		function groupBy(items, properties, collect) {
+		  if (arguments.length < 2) return arr;
+		  var groups = _groupBy(items, properties);
+		  // collect other properties values in array
+		  if (collect && collect.length > 0)
+		    groups = collectProperties(groups, collect);
+
+		  return groups;
+		}
+
+		function _groupBy(items, properties) {
+		  var group = {};
+		 	    if (typeof properties[0] === 'string') {
+		 	      group = groupByCategory(items, properties[0]);
+		 	    } else {
+		 	      group = groupByRange(items, properties[0]);
+		 	    }
+		      properties = properties.slice(1);
+		    if (properties.length > 0) {
+		      for (var key in group) {
+		        group[key] = _groupBy(group[key], properties);
+		      }
+		    }
+		    return group;
+		}
+		function groupByCategory(arr, prop) {
+		  var isPropertyArray = Array.isArray(valueAt(arr[0], prop));
+		  if (isPropertyArray) {
+		    return arr.reduce(function(group, f) {
+		      var tags = valueAt(f, prop);
+		      tags.forEach(function(tag) { 
+		        group[tag] = group[tag] || [];
+		        group[tag].push(f);
+		      });
+		      return group;
+		    },{});
+		  } else {
+		    return arr.reduce(function(group, f) {
+		      var tag = valueAt(f, prop);
+		      group[tag] = group[tag] || [];
+		      group[tag].push(f);
+		      return group;
+		    },{});
+		  }
+		}
+		function valueAt(obj,path) {
+		  //taken from http://stackoverflow.com/a/6394168/713573
+		  function index(prev,cur, i, arr) { 
+		    if (prev.hasOwnProperty(cur)) {
+		      return prev[cur]; 
+		    } else {
+		      throw new Error(arr.slice(0,i+1).join('.') + ' is not a valid property path'); 
+		    }
+		  }
+		  return path.split('.').reduce(index, obj);
+		}
+
+
+
 		function getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData,start, end, currentPage = 1, totalPages, allRecordsForObject = []) {
 		  if (!sceneKey || !viewKey) {
 		    throw new Error('Missing scene or view key!');
@@ -81,15 +140,17 @@
 
 	      let data = allRecordsForObject;
 
-	      console.log(data);
+	      // console.log(data);
 	      data = filterDate(start,end,data)
-	      console.log(data);
+	      // console.log(data);
 
 	      var people = []
 	      var events = []
-	      var tabledata = []
+	      // var tabledata = []
 	      var c = 0;
+	      console.log(data)
 	      for (let d of data.entries()){ // Construct the JSON payload for the calendar
+	      	// console.log(d)
 	        people.push({id: d[1].id, //Field_57 is the name
 	                    title: d[1].field_57,
 	                    children: [{
@@ -118,54 +179,124 @@
 	                    color: '#FF0000',
 	                    record_id:d[1].id
 	                    })
-	        tabledata.push({
-	        	id:String(c),
-	        	name: d[1].field_57,
-	        	"_children":[
-	        		{
-	        			id:c+1, name:"Scheduled", 
-	        			hours:"15", 
-	        			d1:`Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\nWiping the counters: 12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n`,
-	        			d2:"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\n",
-	        			d3:"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\n",
-	        			d4:"Cleaning: 12:00pm to 2:00pm,\n",
-	        			d5:"Cleaning: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\n",
-	        			d6:"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm",
-	        			d7:"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm",
-	        			formatter:"textarea", 
-	        		},
-			        {
-			        	id:c+2, name:"Actual",
-			         	hours:"42",
-	        			d1:`Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\nWiping the counters: 12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n`,
-	        			d2:"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\n",
-	        			d3:"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\n",
-	        			d4:"Cleaning: 12:00pm to 2:00pm,\n",
-	        			d5:"Cleaning: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\n",
-	        			d6:"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm",
-	        			d7:"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm",
-	        			formatter:"textarea",}
-	        	]
-	        })
-	        c += 1;
-	      }
-	      // console.log([JSON.parse(JSON.stringify(people))])
-	      // console.log([JSON.parse(JSON.stringify(events))])
+	      //   tabledata.push({
+	      //   	id:c,
+	      //   	name: d[1].field_57,
+	      //   	"_children":[
+	      //   		{
+	      //   			id:c+1, name:"Scheduled", 
+	      //   			hours:"15", 
+	      //   			'd1':`Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\nWiping the counters: 12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n`,
+	      //   			'd2':"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\n",
+	      //   			'd3':"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\n",
+	      //   			'd4':"Cleaning: 12:00pm to 2:00pm,\n",
+	      //   			'd5':"Cleaning: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\n",
+	      //   			'd6':"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm",
+	      //   			'd7':"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm",
+	      //   			formatter:"textarea", 
+	      //   		},
 
-		// var tabledata = [
-		// 	    {id:1, name:"Bob", "_children":[
-		// 	        {id:2, name:"Scheduled", hours:[15,14], d1:`Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\nWiping the counters: 12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n`,d2:"",d3:"",d4:"",d5:"",d6:"",d7:"", formatter:"textarea"}, 
-		// 	        {id:3, name:"Actual", hours:"42", d1:"",d2:"",d3:"",d4:"",d5:"",d6:"",d7:""},
-		// 	    ]},
-		// 	    {id:4, name:"Nate", "_children":[
-		// 	        {id:5, name:"Scheduled", hours:"10", d1:"12:00pm to 2:00pm,\n12:00pm to 2:00pm\n12:00pm to 2:00pm,\n12:00pm to 2:00pm\n12:00pm to 2:00pm,\n12:00pm to 2:00pm\n12:00pm to 2:00pm,\n12:00pm to 2:00pm\n12:00pm to 2:00pm,\n12:00pm to 2:00pm\n12:00pm to 2:00pm,\n12:00pm to 2:00pm\n",d2:"",d3:"",d4:"",d5:"",d6:"",d7:""}, 
-		// 	        {id:6, name:"Actual", hours:"12", d1:"",d2:"",d3:"",d4:"",d5:"",d6:"",d7:""},
-		// 	    ]},
-		// 	    {id:7, name:"Paden", "_children":[
-		// 	        {id:8, name:"Scheduled", hours:"20", d1:"",d2:"",d3:"",d4:"",d5:"",d6:"",d7:""}, 
-		// 	        {id:9, name:"Actual", hours:"16", d1:"",d2:"",d3:"",d4:"",d5:"",d6:"",d7:""},
-		// 	    ]},
-		// 	];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	        		
+			    //     {
+			    //     	id:c+2, name:"Actual",
+			    //      	hours:"42",
+	      //   			d1:`Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\nWiping the counters: 12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n`,
+	      //   			d2:"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\n",
+	      //   			d3:"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\n",
+	      //   			d4:"Cleaning: 12:00pm to 2:00pm,\n",
+	      //   			d5:"Cleaning: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\n",
+	      //   			d6:"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm",
+	      //   			d7:"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm",
+	      //   			formatter:"textarea",}
+	      //   	]
+	      //   })
+	      //   c += 1;
+	      }
+	    var tabledata = []
+	    var keys = []
+        var group = JSON.parse(JSON.stringify(groupBy(data,['field_57','field_58_raw.date'])))
+        console.log(group)
+
+        Object.keys(group).forEach(function (item) {
+	   	Object.keys(group[item]).forEach(function (item2) {
+	   		keys.push(item2)
+	   		});
+	   });
+	   keys = Array.from(new Set(keys))
+	   	Object.keys(group).forEach(function (item) {
+		   	for(i of keys){
+		   		if(typeof group[item][i] !== "undefined"){
+		   			 var tasks_scheduled = []
+		   			 var tasks_actual = []
+		   			 group[item][i].forEach(function(element, index){
+		   			 	tasks_scheduled.push(`${element.field_61}:${element.field_58.slice(11,)}`)
+		   			 	tasks_actual.push(`${element.field_61}:${element.field_67.slice(11,)}`)
+		   			 });
+		   			 group[item][i][0] = tasks_scheduled.join('\n')
+		   			 group[item][i][1] = tasks_actual.join('\n')
+		   		}
+		   	}
+		});
+
+
+
+
+	   	//FUCK YES -> GOLD
+		function getDataFromList(grouped,item) {
+			var scheduled = Object.entries(grouped[item]).map((i)=>{
+				return {[i[0]]:i[1][0]}
+			})
+			scheduled.unshift({'name':'Scheduled'})
+			scheduled =  scheduled.reduce(function(result, current) {
+													  return Object.assign(result, current);
+													}, {}); //Need to understand reduce
+			console.log(scheduled)
+			var actual = Object.entries(grouped[item]).map((i)=>{
+				return {[i[0]]:i[1][0]}
+			})
+			actual.unshift({'name':'Actual'})
+			actual =  actual.reduce(function(result, current) {
+											  return Object.assign(result, current);
+											}, {});	
+			return [scheduled,actual]
+		}
+		var _id = 0; 
+		console.log(group)
+		for (var g of Object.keys(group)){
+			tabledata.push({
+				'name':g,
+				'id':_id,
+				'_children':getDataFromList(group,g),
+				'formatter':"textarea"
+			})
+			_id++;
+		}
+	    console.log(tabledata)
 		var cols = [];
 		cols.push({title:"Name", field:"name"})
 		cols.push({title:"Hours", field:"hours"})
@@ -180,9 +311,10 @@
 		dates_array.forEach( function(element, index) {
 			weekday = moment(element).format('dddd')
 			cols.push({title:`${weekday}<br/>${moment(element).format('MM/DD')}`,
-					   field:`d${index+1}`,
+					   field:`${moment(element).format('MM/DD/YYYY')}`,
 					   formatter:"textarea"})
 		});
+		// console.log(cols)
 
 		var table = new Tabulator("#example-table", {
 			data:tabledata,           //load row data from array
