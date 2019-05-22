@@ -139,18 +139,12 @@
 
 
 	      let data = allRecordsForObject;
-
-	      // console.log(data);
 	      data = filterDate(start,end,data)
-	      // console.log(data);
 
 	      var people = []
 	      var events = []
-	      // var tabledata = []
 	      var c = 0;
-	      console.log(data)
 	      for (let d of data.entries()){ // Construct the JSON payload for the calendar
-	      	// console.log(d)
 	        people.push({id: d[1].id, //Field_57 is the name
 	                    title: d[1].field_57,
 	                    children: [{
@@ -179,68 +173,15 @@
 	                    color: '#FF0000',
 	                    record_id:d[1].id
 	                    })
-	      //   tabledata.push({
-	      //   	id:c,
-	      //   	name: d[1].field_57,
-	      //   	"_children":[
-	      //   		{
-	      //   			id:c+1, name:"Scheduled", 
-	      //   			hours:"15", 
-	      //   			'd1':`Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\nWiping the counters: 12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n`,
-	      //   			'd2':"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\n",
-	      //   			'd3':"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\n",
-	      //   			'd4':"Cleaning: 12:00pm to 2:00pm,\n",
-	      //   			'd5':"Cleaning: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\n",
-	      //   			'd6':"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm",
-	      //   			'd7':"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm",
-	      //   			formatter:"textarea", 
-	      //   		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	        		
-			    //     {
-			    //     	id:c+2, name:"Actual",
-			    //      	hours:"42",
-	      //   			d1:`Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\nWiping the counters: 12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n12:00pm to 2:00pm,\n`,
-	      //   			d2:"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\n",
-	      //   			d3:"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\nWashing the dishes: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm,\n",
-	      //   			d4:"Cleaning: 12:00pm to 2:00pm,\n",
-	      //   			d5:"Cleaning: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\nCleaning: 12:00pm to 2:00pm,\n",
-	      //   			d6:"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm",
-	      //   			d7:"Cleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pmCleaning: 12:00pm to 2:00pm,\nCooking: 12:00pm to 2:00pm",
-	      //   			formatter:"textarea",}
-	      //   	]
-	      //   })
-	      //   c += 1;
 	      }
 	    var tabledata = []
 	    var keys = []
-        var group = JSON.parse(JSON.stringify(groupBy(data,['field_57','field_58_raw.date'])))
-        console.log(group)
+	    try {
+        	var group = JSON.parse(JSON.stringify(groupBy(data,['field_57','field_58_raw.date'])))
+	    } catch(e) {
+	    	alert('No data found for range');
+	    	return
+	    }
 
         Object.keys(group).forEach(function (item) {
 	   	Object.keys(group[item]).forEach(function (item2) {
@@ -254,11 +195,11 @@
 		   			 var tasks_scheduled = []
 		   			 var tasks_actual = []
 		   			 group[item][i].forEach(function(element, index){
-		   			 	tasks_scheduled.push(`${element.field_61}:${element.field_58.slice(11,)}`)
-		   			 	tasks_actual.push(`${element.field_61}:${element.field_67.slice(11,)}`)
+		   			 	tasks_scheduled.push(`<strong>${element.field_61}:</strong> ${element.field_58.slice(11,)}`)
+		   			 	tasks_actual.push(`<strong>${element.field_61}:</strong> ${element.field_67.slice(11,)}`)
 		   			 });
-		   			 group[item][i][0] = tasks_scheduled.join('\n')
-		   			 group[item][i][1] = tasks_actual.join('\n')
+		   			 group[item][i][0] = tasks_scheduled.join('<br/>')
+		   			 group[item][i][1] = tasks_actual.join('<br/>')
 		   		}
 		   	}
 		});
@@ -275,7 +216,6 @@
 			scheduled =  scheduled.reduce(function(result, current) {
 													  return Object.assign(result, current);
 													}, {}); //Need to understand reduce
-			console.log(scheduled)
 			var actual = Object.entries(grouped[item]).map((i)=>{
 				return {[i[0]]:i[1][0]}
 			})
@@ -286,17 +226,15 @@
 			return [scheduled,actual]
 		}
 		var _id = 0; 
-		console.log(group)
 		for (var g of Object.keys(group)){
 			tabledata.push({
 				'name':g,
 				'id':_id,
 				'_children':getDataFromList(group,g),
-				'formatter':"textarea"
+				'formatter':"html"
 			})
 			_id++;
 		}
-	    console.log(tabledata)
 		var cols = [];
 		cols.push({title:"Name", field:"name"})
 		cols.push({title:"Hours", field:"hours"})
@@ -305,20 +243,19 @@
 		var from = moment($('#from').val());
 		var to = moment(from).add(7,'days')
 		dates_array.push(from.toDate());
-		for(i=1;i<=8;i++){
+		for(i=1;i<7;i++){
 			dates_array.push(moment(from).add(i,'days'));
 		}
 		dates_array.forEach( function(element, index) {
 			weekday = moment(element).format('dddd')
 			cols.push({title:`${weekday}<br/>${moment(element).format('MM/DD')}`,
 					   field:`${moment(element).format('MM/DD/YYYY')}`,
-					   formatter:"textarea"})
+					   formatter:"html"})
 		});
-		// console.log(cols)
 
 		var table = new Tabulator("#example-table", {
 			data:tabledata,           //load row data from array
-			layout:"fitColumns",      //fit columns to width of table
+			layout:"fitData",      //fit columns to data
 			responsiveLayout:"hide",  //hide columns that dont fit on the table
 			resizableRows:true,
 			tooltips:true,            //show tool tips on cells
@@ -332,14 +269,24 @@
 				{column:"name", dir:"asc"},
 			],
 			columns: cols,
-			groupBy: "name",
+			groupBy:'name'
 		});
 	  };
+	  var sparklineFormatter = function(cell, formatterParams, onRendered){
+		    onRendered(function(){
+		    $(cell.getElement()).sparkline(cell.getValue(), {width:"100%", type:"bar"});
+		});
+		};
 	  $(document).ready(function() {
 		$('#date-submit').on('click', function (){
 			var start = moment($('#from').val());
 			var end = moment(start).add(7,'days')
  			getAllRecordsForObject('scene_7', 'view_69', handleData, start = start, end = end);
+ 			$('.tabulator-table').each(function(){
+ 				$('.tabulator-row').each(function(){
+ 					console.log($(this).find(".tabulator-cell").html())
+ 				})
+ 			})
 		});
 	  });
 	</script>
