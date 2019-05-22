@@ -10,7 +10,7 @@
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script> <!--bootstrap js-->
 	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script> <!--jquery UI-->
 	<script src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js'></script> <!--moment js-->
-	<script src='https://unpkg.com/json-groupby@1.1.0/dist/json-groupby.js'></script> <!--json-groupby js-->
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
 </head>
 <body>
 	<form id="date-range">
@@ -219,30 +219,34 @@
 		   			 group[item][i][3] = actualHours
 		   			 var num = group[item][i][2] - group[item][i][3]
 		   			 group[item][i][4] = precise(num) // Scheduled - Actual. Round to 2 decimals
-		   			 if (group[item][i][4] > 0){
-		   			 	group[item][i][5] = '<strong style="color:#0000ff">Under-time</strong>' // Blue Color
-		   			 } else if (group[item][i][4] < 0){
-		   			 	group[item][i][5] = '<strong style="color:#e62e00">Over-time</strong>' // Red color
-		   			 }else{
-		   			 	group[item][i][5] = '<strong style="color:#00cc00">On-time</strong>' // Green Color
-		   			 }
+		   			 group[item][i][5] = getOverUnderStyle(group[item][i][4])
 		   		}
 		   	}
 		});
+		function getOverUnderStyle(item){
+			if (item > 0){
+			 	return `<strong style="color:#0000ff">${item} hours </strong> <i class="fas fa-question-circle" style="color:#0000ff"	></i>` // Blue Color
+			 } else if (item < 0){
+			 	return `<strong style="color:#e62e00">${item} hours </strong> <i class="fas fa-exclamation-triangle" style="color:#e62e00"></i>` // Red color
+			 }else{
+			 	return `<strong style="color:#00cc00">${item} hours </strong> <i class="fas fa-check-square" style="color:#00cc00"></i>` // Green Color
+			 }
+		}
 
 	   	//FUCK YES -> GOLD
 		function getChildrenFromList(group,item) {
+		  	// i[0] - date
+		  	// i[1] - all entries
+		  	// i[1][0] - Scheduled events string
+		  	// i[1][1] - Actual events string
+		  	// i[1][2] - Total Scheduled hours
+		  	// i[1][3] - Total Actual hours
+		  	// i[1][4] - Difference of Scheduled - Actual
+		  	// i[1][4] - Over, under or on time string
 			var scheduled = Object.entries(group[item]).map((i)=>{
-			  	// i[0] - date
-			  	// i[1] - all entries
-			  	// i[1][0] - Scheduled events string
-			  	// i[1][1] - Actual events string
-			  	// i[1][2] - Total Scheduled hours
-			  	// i[1][3] - Total Actual hours
-			  	// i[1][4] - Difference of Scheduled - Actual
-			  	// i[1][4] - Over, under or on time string
 				return {[i[0]]:i[1][0]}
 			})
+			// console.log(scheduled)
 			scheduled.unshift({'name':'Scheduled'})
 			scheduled =  scheduled.reduce(function(result, current) {
 													  return Object.assign(result, current);
@@ -263,34 +267,59 @@
 											  return Object.assign(result, current);
 											}, {});
 
+			var scheduledTotalByWeek = 0;
+			for (var key in totalScheduledHours) {
+				if(typeof totalScheduledHours[key] !== "string"){
+			    	scheduledTotalByWeek += Number.parseFloat(totalScheduledHours[key]);
+			    }
+			};
+			scheduled.hours = scheduledTotalByWeek
+
+			console.log(totalScheduledHours,scheduledTotalByWeek)
+
 			var totalActualHours = Object.entries(group[item]).map((i)=>{
 				return {[i[0]]:i[1][3]}
 			})
+			// totalActualHours.name = 'Total Actual Hours'
 			totalActualHours.unshift({'name':'Total Actual Hours'})
 			totalActualHours =  totalActualHours.reduce(function(result, current) {
 											  return Object.assign(result, current);
 											}, {});
+			var actualTotalByWeek = 0;
+			for (var key in totalActualHours) {
+			    if(typeof totalActualHours[key] !== "string"){
+			    	actualTotalByWeek += Number.parseFloat(totalActualHours[key]);
+			    }
+			};
+			actual.hours = actualTotalByWeek
+
+			console.log(totalActualHours,actualTotalByWeek)
 
 			var hoursDiff = Object.entries(group[item]).map((i)=>{
-				return {[i[0]]:i[1][4]}
+				return {[i[0]]:getOverUnderStyle(i[1][4])}
 			})
 			hoursDiff.unshift({'name':'Time Difference'})
+			hoursDiff.unshift({'hours':getOverUnderStyle(actualTotalByWeek - scheduledTotalByWeek)})
 			hoursDiff =  hoursDiff.reduce(function(result, current) {
 											  return Object.assign(result, current);
 											}, {});
-			var overUnder = Object.entries(group[item]).map((i)=>{
-				return {[i[0]]:i[1][5]}
-			})
-			overUnder.unshift({'name':'Over, Under or On-time'})
-			overUnder =  overUnder.reduce(function(result, current) {
-											  return Object.assign(result, current);
-											}, {});
-			return [scheduled,actual,totalScheduledHours,totalActualHours,hoursDiff,overUnder]
+			console.log(hoursDiff.hours)
+			// var overUnder = Object.entries(group[item]).map((i)=>{
+			// 	return {[i[0]]:i[1][5]}
+			// })
+			// overUnder.unshift({'name':'Over, Under or On-time'})
+			// overUnder.unshift({'hours':getOverUnderStyle(hoursDiff.hours)})
+
+			// overUnder =  overUnder.reduce(function(result, current) {
+			// 								  return Object.assign(result, current);
+			// 								}, {});
+
+			return [scheduled,actual,totalScheduledHours,totalActualHours,hoursDiff]
 		}
 		var _id = 0; 
 		for (var g of Object.keys(group)){
 			tabledata.push({
-				'name':g,
+				'name':`<strong style='font-size:2em'>${g}</strong>`,
 				'id':_id,
 				'_children':getChildrenFromList(group,g),
 				'formatter':"html"
@@ -298,8 +327,8 @@
 			_id++;
 		}
 		var cols = [];
-		cols.push({title:"Name", field:"name"})
-		cols.push({title:"Hours", field:"hours"})
+		cols.push({title:"Name", field:"name",'formatter':'html'})
+		cols.push({title:"Total Hours by Week", field:"hours",'formatter':'html','align':'center'})
 
 		var dates_array = []; 
 		var from = moment($('#from').val());
@@ -312,7 +341,8 @@
 			weekday = moment(element).format('dddd')
 			cols.push({title:`${weekday}<br/>${moment(element).format('MM/DD')}`,
 					   field:`${moment(element).format('MM/DD/YYYY')}`,
-					   formatter:"html"})
+					   formatter:"html",
+					   'align':'center'})
 		});
 
 		var table = new Tabulator("#example-table", {
@@ -331,29 +361,16 @@
 			// 	{column:"name", dir:"asc"},
 			// ],
 			columns: cols,
-			groupBy:'name'
+			// groupBy:'name'
 		});
 	  };
-	  var sparklineFormatter = function(cell, formatterParams, onRendered){
-		    onRendered(function(){
-		    $(cell.getElement()).sparkline(cell.getValue(), {width:"100%", type:"bar"});
-		});
-		};
 	  $(document).ready(function() {
 		$('#date-submit').on('click', function (){
 			var start = moment($('#from').val());
 			var end = moment(start).add(7,'days')
  			getAllRecordsForObject('scene_7', 'view_69', handleData, start = start, end = end);
- 			$('.tabulator-table').each(function(){
- 				$('.tabulator-row').each(function(){
- 					console.log($(this).find(".tabulator-cell").html())
- 				})
- 			})
 		});
 	  });
 	</script>
-	<style type="text/css" media="screen">
-
-	</style>
 </body>
 </html>
