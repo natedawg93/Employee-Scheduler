@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link href="https://dl.dropboxusercontent.com/s/thqhda8nk5xl4ac/main.css?dl=1" rel="stylesheet" /> <!--Core css-->
+<link href="https://dl.dropboxusercontent.com/s/c6rm95oyq8zzjrz/daygrid_main.css?dl=1" rel="stylesheet" /> <!--daygrid css-->
+<link href="https://dl.dropboxusercontent.com/s/7qsnp5072jddkbj/timegrid_main.css?dl=1" rel="stylesheet" /> <!--timegrid css-->
+<link href="https://dl.dropboxusercontent.com/s/7nl45exb3rkwej3/list_main.css?dl=1" rel="stylesheet" /> <!--list css-->
+<link href="https://dl.dropboxusercontent.com/s/inrtwvxx75qm2rs/timeline_main.css?dl=1" rel="stylesheet" /> <!--timeline css-->
+<link href="https://dl.dropboxusercontent.com/s/04pcb19x53ua8js/resource_timeline_main.css?dl=1" rel="stylesheet" /> <!--resource timeline css-->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"> <!--bootstrap css-->
+<script src="https://code.jquery.com/jquery-3.4.1.js"></script> <!--jquery cdn-->
+<script src="https://unpkg.com/tooltip.js"></script> <!--tooltip cdn-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.js"></script> <!--moment js cdn-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script> <!--bootstrap js-->
+<!-- <script src="http://fullcalendar.io/js/fullcalendar-2.1.1/lib/moment.min.js"></script> -->
+<!-- <script src="http://fullcalendar.io/js/fullcalendar-2.1.1/lib/jquery.min.js"></script> -->
+<!-- <script src="http://fullcalendar.io/js/fullcalendar-2.1.1/lib/jquery-ui.custom.min.js"></script> -->
+<script src="http://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.1.0/fullcalendar.js"></script>
+<script src="https://dl.dropboxusercontent.com/s/96w8t0jng58rsyy/main.js?dl=1"></script> <!--Core js-->
+<script src="https://dl.dropboxusercontent.com/s/ydkr12hihtuzfm2/interaction_main.js?dl=1"></script> <!--Interaction main js-->
+<script src="https://dl.dropboxusercontent.com/s/ivp8qfg7cu0azql/daygrid_main.js?dl=1"></script> <!--daygrid js-->
+<script src="https://dl.dropboxusercontent.com/s/02zuvaflwou5ih3/timegrid_main.js?dl=1"></script> <!--timegrid js-->
+<script src="https://dl.dropboxusercontent.com/s/bij4kyj0dab0wsx/list_main.js?dl=1"></script> <!--list js-->
+<script src="https://dl.dropboxusercontent.com/s/dtq2qpbpe11gapn/timeline_main.js?dl=1"></script> <!--timeline js-->
+<script src="https://dl.dropboxusercontent.com/s/3ocwfmn1gr9ajwd/resource_common_main.js?dl=1"></script> <!--resource common js-->
+<script src="https://dl.dropboxusercontent.com/s/7m8eixl1zxtdj9t/resource_timeline_main.js?dl=1"></script> <!--resource timeline js-->
+
+
+<script>
+
+  // https://stackoverflow.com/questions/10840084/create-event-with-fullcalendar-when-clicking-on-calendar-rails
+
+
+
+
+  /* Function to get all the records for an object*/
+function getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData,start, end, currentPage = 1, totalPages, allRecordsForObject = []) {
+  if (!sceneKey || !viewKey) {
+    throw new Error("Missing scene or view key!");
+  }
+
+  if (!callbackFunctionToHandleData) {
+    throw new Error("No callback function provided; make sure the data is handled somehow.");
+  }
+  // AJAX prep
+  var url = "https://api.knack.com/v1/pages/" + sceneKey + "/views/" + viewKey + "/records?page=" + currentPage + "&rows_per_page=1000";
+  var headers = {
+    "X-Knack-Application-ID": "5c93c4d50fbcdf5726ae5439",
+    "X-Knack-REST-API-Key": "e46f6190-4bfb-11e9-9d62-3b671224caf2"
+  };
+
+  $.ajax({
+    url: url,
+    headers: headers,
+    type: "GET",
+  }).done(function(responseData) {
+    allRecordsForObject = allRecordsForObject.concat(responseData.records);
+    // Recursively continue getting records until we have all of them
+    if (currentPage < responseData.total_pages) {
+      currentPage++;
+      getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData, start, end, currentPage, responseData.total_pages, allRecordsForObject);
+      return;
+    }
+    // Handle ALL records with our callback function
+    callbackFunctionToHandleData(allRecordsForObject, start, end, sceneKey, viewKey);
+  });
+};  
+
+/* Function to handle the data*/
+
+function handleData(allRecordsForObject, start, end, sceneKey, viewKey) {
+
+
+  function parse_iso(iso_time){ // Function to remove the ".000Z" from the ISO string
+    return String(iso_time).slice(0,-5);
+  };
+
+  function parseDate(dateStr) {
+    var date = dateStr.split("/");
+    var month = date[0] - 1 ; //January = 0
+    var day = date[1]; 
+    var year = date[2];
+    return new Date(year, day, month); 
+  };
+
+  // Function to filter the data by scheduled date
+  function filterDate(startDate,endDate,data){ 
+    var filteredData = [];
+    for(var index in data) {
+      var obj = data[index];
+      var date = moment(obj.field_58_raw.date,"MM/DD/YYYY").toDate();
+      if(date >= startDate && date <= endDate)
+        filteredData.push(obj);
+    }
+    return filteredData;
+  }
+
+  
+
+  let data = JSON.parse(JSON.stringify(filterDate(start,end,allRecordsForObject)));
+  console.log(data)
+
+  var t_data = JSON.parse(JSON.stringify(filterDate(start,end,allRecordsForObject))) // Table data needs to be filtered by date
+  
+  /* Begin code for calendar */
+  if (!Array.isArray(data) || !data.length) {
+    alert("No data found for range");
+    return
+  }
+  function updateData(record_id, type, from, to){
+    var put_url = "https://api.knack.com/v1/objects/object_6/records/" + record_id;
+
+    var payload = new Object()
+
+    var from_am_pm = from.utc().format("A")
+    var from_minute = from.utc().format("mm")
+    var from_hour = from.utc().format("hh")
+    var from_date = from.utc().format("MM/DD/YYYY")
+
+    var to_am_pm = to.utc().format("A")
+    var to_minute = to.utc().format("mm")
+    var to_hour = to.utc().format("hh")
+    var to_date = to.utc().format("MM/DD/YYYY")
+
+    if(type === "Scheduled"){
+      console.log("Scheduled Resized")
+      payload.field_58 = {
+          am_pm:from_am_pm,
+          date:from_date,
+          hours:from_hour,
+          minutes:from_minute,
+          to:{
+            am_pm:to_am_pm,
+            date:to_date,
+            hours:to_hour,
+            minutes:to_minute,
+          }
+      }
+      
+    }else{
+      console.log("Actual Resized")
+      payload.field_67 = {
+          am_pm:from_am_pm,
+          date:from_date,
+          hours:from_hour,
+          minutes:from_minute,
+          to:{
+            am_pm:to_am_pm,
+            date:to_date,
+            hours:to_hour,
+            minutes:to_minute,
+          } // End to
+      } // End main object
+    } // End else
+
+     $.ajax({
+        url: put_url,
+        type: "PUT",
+        headers: {
+          "X-Knack-Application-ID": "5c93c4d50fbcdf5726ae5439",
+          "X-Knack-REST-API-Key": "e46f6190-4bfb-11e9-9d62-3b671224caf2",
+          "content-type": "application/json"
+        },
+        data: JSON.stringify(payload),
+        success:function(responseData) {
+          console.log("Record updated!");
+        }
+    }); // End ajax
+  } // End updateData
+  
+
+  let people = []
+  let events = []
+  let constraints_scheduled = []
+  let constraints_actual = []
+  for (let d of data.entries()){
+    constraints_scheduled.push(d[1].field_57 + "_Scheduled")
+    constraints_actual.push(d[1].field_57 + "_Actual")
+  }
+  constraints_scheduled = [...new Set(constraints_scheduled)]
+  constraints_actual = [...new Set(constraints_actual)]
+
+  console.log(constraints_scheduled)
+  console.log(constraints_actual)
+
+  var c = 0;
+  for (let d of data.entries()){ // Construct the JSON payload for the calendar
+    people.push({
+                 id: d[1].field_57, //Field_57 is the name. We are matching multiple tasks for the same person based on the name.
+                 // This is ok because the name is a list of pre-set values
+                 title: d[1].field_57,
+                 children: [
+                 {
+                   id: d[1].field_57 + "_Scheduled",
+                   title: "Scheduled",
+                 },
+
+                 {
+                   id: d[1].field_57 + "_Actual",
+                   title: "Actual",
+                 }
+              ]
+          })
+    events.push({id: String(c) + "_Scheduled",
+                 resourceId: d[1].field_57 + "_Scheduled",
+                 start: parse_iso(d[1].field_58_raw.iso_timestamp),//Field_58 is the scheduled time
+                 end: parse_iso(d[1].field_58_raw.to.iso_timestamp),
+                 title: d[1].field_61, // Field_61 is the title (whats displayed inside the bar)
+                 color:"#00cc00", // Green
+                 record_id:d[1].id,
+                 constraint: {
+                  resourceIds:constraints_scheduled
+                 }
+                })
+    events.push({id: String(c) + "_Actual",
+                 resourceId: d[1].field_57 + "_Actual", 
+                 start: parse_iso(d[1].field_67_raw.iso_timestamp), //Field_67 is the actual time
+                 end: parse_iso(d[1].field_67_raw.to.iso_timestamp),
+                 title: d[1].field_61,
+                 color: "#e62e00", // Red
+                 record_id:d[1].id,
+                 constraint: {
+                  resourceIds:constraints_actual
+                 }
+                })
+    c += 1;
+  }
+  console.log(events)
+  var calendarEl = document.getElementById("scheduler");
+  var calendar = new FullCalendar.Calendar(calendarEl, {
+    timeZone: "UTC",
+    schedulerLicenseKey: "GPL-My-Project-Is-Open-Source",
+    plugins: [ "interaction", "dayGrid", "timeGrid", "list", "resourceTimeline" ],
+    //now: String(today),
+    now: $("#from").val(),
+    editable: true, // enable draggable events
+    selectable: true,
+    aspectRatio: 2.0,
+    selectMirror: true,
+    //scrollTime: "08:00:00", // undo default 6am scrollTime
+    header: {
+      left: "today prev,next",
+      center: "title",
+      right: "resourceTimelineDay,resourceTimelineThreeDays,timeGridWeek,dayGridMonth,listWeek"
+    },
+    defaultView: "resourceTimeline",
+    views: {
+      resourceTimeline: {
+        type: "resourceTimeline",
+        duration: { hours: 8 },
+        buttonText: "15 minutes",
+        selectable: true,
+
+      }
+    },
+    eventOverlap: false,
+    resourceLabelText: "People",
+    // select: function (info) {
+    //       var newTitle = prompt("Enter Title");
+    //       console.log(info)
+    //       console.log(moment(info.startStr).toISOString())
+    //       console.log(moment(info.endStr).toISOString())
+    //       // var allDay = !start.hasTime && !end.hasTime;
+    //       if(newTitle){
+    //         $("#scheduler").fullCalendar("renderEvent", {
+    //           title: newTitle,
+    //           start: moment(info.startStr).toISOString(),
+    //           end: moment(info.endStr).toISOString(),
+    //           resourceId: info.resource.id
+    //           // color: "#e62e00"
+    //         });
+    //       }
+    //   },
+    select: function(start, end) {
+                // Display the modal.
+                // You could fill in the start and end fields based on the parameters
+                $('.modal').modal('show');
+
+            },
+
+    resources:  [JSON.parse(JSON.stringify(people))][0],
+    events: [JSON.parse(JSON.stringify(events))][0],
+    eventDrop: function(info) {
+        var regex = /_(.*)/gim
+        var type = info.event._def.resourceIds[0].match(regex)[0].slice(1,) // Get just "Actual" or "Scheduled"
+        const record_id = info.event._def.extendedProps.record_id
+        if (!confirm("Are you sure about this change?")) {
+          info.revert();
+        }else{
+          updateData(record_id, type, moment(info.event.start), moment(info.event.end))
+        }
+      },
+      // End Event drop
+      eventResize: function(info) {
+        var regex = /_(.*)/gim
+        var type = info.event._def.resourceIds[0].match(regex)[0].slice(1,) // Get just "Actual" or "Scheduled"
+        const record_id = info.event._def.extendedProps.record_id
+
+        if (!confirm("is this okay?")) {
+          info.revert();
+        }else{
+          updateData(record_id, type, moment(info.event.start), moment(info.event.end))
+      } // End confirm else
+    }, // End Event resize
+    eventClick: function(info) {
+                // Display the modal and set the values to the event values.
+                $('.modal').modal('show');
+                $('.modal').find('#title').val(info.event.title);
+                $('.modal').find('#starts-at').val(info.event.start);
+                $('.modal').find('#ends-at').val(info.event.end);
+            },
+  }); // End calendar instantiation
+
+  calendar.render();
+} // End function handle data
+
+  $(document).ready(function() {
+    $("#date-submit").on("click", function (){
+      var start = moment($("#from").val());
+      var end = moment(start).add(7,"days")
+      getAllRecordsForObject("scene_7", "view_69", handleData, start = start, end = end);
+    });
+     $("#starts-at, #ends-at").datetimepicker();
+
+        // Whenever the user clicks on the "save" button om the dialog
+        $('#save-event').on('click', function() {
+            var title = $('#title').val();
+            if (title) {
+                var eventData = {
+                    title: title,
+                    start: $('#starts-at').val(),
+                    end: $('#ends-at').val()
+                };
+                $('#scheduler').fullCalendar('renderEvent', eventData, true); // stick? = true
+            }
+            $('#scheduler').fullCalendar('unselect');
+
+            // Clear modal inputs
+            $('.modal').find('input').val('');
+
+            // hide modal
+            $('.modal').modal('hide');
+        });
+    });
+
+</script>
+<style>
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+    font-size: 14px;
+  }
+
+  #calendar {
+    max-width: 900px;
+    margin: 50px auto;
+  }
+  #save, #cancel{
+    display: table;
+    margin: auto;
+    margin-top: 10px;
+    margin-bottom: 10px; 
+  }
+  .fc-content{
+    color: #000;
+  }
+
+</style>
+</head>
+<body>
+  <form id="date-range">
+    From:
+    <input type="date" name="from" min="2015-01-01" id="from" required><br><br>
+    <button type="button" class="btn btn-primary" id="date-submit">Submit</button>
+  </form>
+  <br />
+  <div id="scheduler"></div>
+  <div class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Create new event</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <label class="col-xs-4" for="title">Event title</label>
+                        <input type="text" name="title" id="title" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <label class="col-xs-4" for="starts-at">Starts at</label>
+                        <input type="text" name="starts_at" id="starts-at" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <label class="col-xs-4" for="ends-at">Ends at</label>
+                        <input type="text" name="ends_at" id="ends-at" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="save-event">Save changes</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+</body>
+</html>
+
+

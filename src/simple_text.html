@@ -9,8 +9,9 @@
 <link href='https://dl.dropboxusercontent.com/s/inrtwvxx75qm2rs/timeline_main.css?dl=1' rel='stylesheet' /> <!--timeline css-->
 <link href='https://dl.dropboxusercontent.com/s/04pcb19x53ua8js/resource_timeline_main.css?dl=1' rel='stylesheet' /> <!--resource timeline css-->
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"> <!--bootstrap css-->
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script> <!--bootstrap js-->
 <script src="https://code.jquery.com/jquery-3.4.1.js"></script> <!--jquery cdn-->
+<script src="https://unpkg.com/tooltip.js"></script> <!--jquery cdn-->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script> <!--bootstrap js-->
 <script src='https://dl.dropboxusercontent.com/s/96w8t0jng58rsyy/main.js?dl=1'></script> <!--Core js-->
 <script src='https://dl.dropboxusercontent.com/s/ydkr12hihtuzfm2/interaction_main.js?dl=1'></script> <!--Interaction main js-->
 <script src='https://dl.dropboxusercontent.com/s/ivp8qfg7cu0azql/daygrid_main.js?dl=1'></script> <!--daygrid js-->
@@ -186,6 +187,14 @@
         },
         resourceLabelText: 'People',
         resources:  [JSON.parse(JSON.stringify(people))][0],
+        eventClick: function(info) {
+          var tooltip = new Tooltip(info.el, {
+            title: info.event.extendedProps.title,
+            placement: 'top',
+            trigger: 'click',
+            container: 'body'
+          });
+        },
         events: [JSON.parse(JSON.stringify(events))][0],
         eventDragStart: function (info) {
             $('#save').attr("disabled", false);
@@ -204,7 +213,7 @@
           } else{
             console.log(`${info.event.title} scheduled time is now from ${parse_iso(info.event.start.toISOString())} to ${parse_iso(info.event.end.toISOString())}`)
           }
-        }
+        },
     });
 
     calendar.render();
@@ -244,7 +253,7 @@
 </script>
 <style>
 
-  body {
+  html, body {
     margin: 0;
     padding: 0;
     font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
