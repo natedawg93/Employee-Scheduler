@@ -45,7 +45,27 @@ function getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData,
     throw new Error("No callback function provided; make sure the data is handled somehow.");
   }
   // AJAX prep
-  var url = "https://api.knack.com/v1/pages/" + sceneKey + "/views/" + viewKey + "/records?page=" + currentPage + "&rows_per_page=1000";
+
+  var filters = new Object()
+  filters.match = "or"
+  filters.rules = new Array()
+  start = moment(start, 'MM/DD/YYYY')
+
+
+  for (let i of [0,1,2,3,4,5,6]){
+    filters.rules.push({
+        "field": "field_58",
+        "operator": "is",
+        "value": {
+              "date": moment(start, 'MM/DD/YYYY').add(i,'d').format('MM/DD/YYYY')
+          }
+      })
+  }
+
+  filters = encodeURIComponent(JSON.stringify(filters))
+  // var url = "https://api.knack.com/v1/pages/" + sceneKey + "/views/" + viewKey + "/records?page=" + currentPage + "&rows_per_page=1000";
+  var url = `https://api.knack.com/v1/objects/object_6/records?filters=${filters}&page=${currentPage}&rows_per_page=1000`;
+
   var headers = {
     "X-Knack-Application-ID": "5c93c4d50fbcdf5726ae5439",
     "X-Knack-REST-API-Key": "e46f6190-4bfb-11e9-9d62-3b671224caf2"
@@ -99,10 +119,11 @@ function handleData(allRecordsForObject, start, end, sceneKey, viewKey) {
 
   
 
-  let data = JSON.parse(JSON.stringify(filterDate(start,end,allRecordsForObject)));
+  // let data = JSON.parse(JSON.stringify(filterDate(start,end,allRecordsForObject)));
+  let data = allRecordsForObject
   console.log(data)
 
-  var t_data = JSON.parse(JSON.stringify(filterDate(start,end,allRecordsForObject))) // Table data needs to be filtered by date
+  // var t_data = JSON.parse(JSON.stringify(filterDate(start,end,allRecordsForObject))) // Table data needs to be filtered by date
   
   /* Begin code for calendar */
   if (!Array.isArray(data) || !data.length) {
@@ -179,7 +200,7 @@ function handleData(allRecordsForObject, start, end, sceneKey, viewKey) {
     constraints_scheduled.push(d[1].field_57 + "_Scheduled")
     constraints_actual.push(d[1].field_57 + "_Actual")
   }
-  constraints_scheduled = [...new Set(constraints_scheduled)]
+  constraints_scheduled = [...new Set(constraints_scheduled)] // Remove duplicates
   constraints_actual = [...new Set(constraints_actual)]
 
   console.log(constraints_scheduled)
@@ -273,7 +294,7 @@ function handleData(allRecordsForObject, start, end, sceneKey, viewKey) {
     //         });
     //       }
     //   },
-    select: function(start, end) {
+    select: function(info) {
                 // Display the modal.
                 // You could fill in the start and end fields based on the parameters
                 $('.modal').modal('show');
@@ -379,34 +400,35 @@ function handleData(allRecordsForObject, start, end, sceneKey, viewKey) {
   </form>
   <br />
   <div id="scheduler"></div>
-  <div class="modal fade" tabindex="-1" role="dialog">
+<div class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">Create new event</h4>
+            <div class="modal-header col-12">
+                <button type="button" class="close col-4" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title col-12">Create new event</h4>
             </div>
             <div class="modal-body">
                 <div class="row">
-                    <div class="col-xs-12">
-                        <label class="col-xs-4" for="title">Event title</label>
+                    <div class="col-12">
+                        <label class="col-4" for="title">Event title</label>
                         <input type="text" name="title" id="title" />
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-xs-12">
-                        <label class="col-xs-4" for="starts-at">Starts at</label>
+                    <div class="col-12">
+                        <label class="col-4" for="starts-at">Starts at</label>
                         <input type="text" name="starts_at" id="starts-at" />
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-xs-12">
-                        <label class="col-xs-4" for="ends-at">Ends at</label>
+                    <div class="col-12">
+                        <label class="col-4" for="ends-at">Ends at</label>
                         <input type="text" name="ends_at" id="ends-at" />
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id='delete-event'>Delete</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" id="save-event">Save changes</button>
             </div>

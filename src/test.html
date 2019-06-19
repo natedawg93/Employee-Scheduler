@@ -62,15 +62,79 @@
   console.log(payload)
 
   var filters = {
-  // Filter for records with a value for this field in the last three months
-      "field":"field_67",
-      "operator":"is",
-      "value":{
-        "date": "06/19/2019"
+  "match": "or",
+  "rules": [
+    {
+        "field": "field_58",
+        "operator": "is",
+        "value": {
+          "date": "05/04/2019"
       }
-    };
-console.log(encodeURIComponent(JSON.stringify(filters)))
+    },
+      {
+        "field": "field_58",
+        "operator": "is",
+        "value": {
+          "date": "05/05/2019"
+      }
+    },
+      {
+        "field": "field_58",
+        "operator": "is",
+        "value": {
+          "date": "05/06/2019"
+      }
+    },
+      {
+        "field": "field_58",
+        "operator": "is",
+        "value": {
+          "date": "05/07/2019"
+      }
+    },
+    {
+        "field": "field_58",
+        "operator": "is",
+        "value": {
+          "date": "05/08/2019"
+      }
+    },
+      {
+        "field": "field_58",
+        "operator": "is",
+        "value": {
+          "date": "05/09/2019"
+      }
+    },
+      {
+        "field": "field_58",
+        "operator": "is",
+        "value": {
+          "date": "05/10/2019"
+      }
+    },
+    
+  ]
+};
 
+var f = new Object()
+f.match = "or"
+f.rules = new Array()
+console.log(encodeURIComponent(JSON.stringify(filters)))
+var start = moment("05/04/2019", 'MM/DD/YYYY')
+
+
+for (let i of [0,1,2,3,4,5,6]){
+  f.rules.push({
+      "field": "field_58",
+      "operator": "is",
+      "value": {
+            "date": moment(start, 'MM/DD/YYYY').add(i,'d').format('MM/DD/YYYY')
+        }
+    })
+}
+
+console.log(encodeURIComponent(JSON.stringify(f)))
 </script>
 
 </head>
