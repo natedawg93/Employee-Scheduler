@@ -9,14 +9,12 @@
 <link href="https://dl.dropboxusercontent.com/s/inrtwvxx75qm2rs/timeline_main.css?dl=1" rel="stylesheet" /> <!--timeline css-->
 <link href="https://dl.dropboxusercontent.com/s/04pcb19x53ua8js/resource_timeline_main.css?dl=1" rel="stylesheet" /> <!--resource timeline css-->
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"> <!--bootstrap css-->
+
 <script src="https://code.jquery.com/jquery-3.4.1.js"></script> <!--jquery cdn-->
 <script src="https://unpkg.com/tooltip.js"></script> <!--tooltip cdn-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.js"></script> <!--moment js cdn-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script> <!--bootstrap js-->
-<!-- <script src="http://fullcalendar.io/js/fullcalendar-2.1.1/lib/moment.min.js"></script> -->
-<!-- <script src="http://fullcalendar.io/js/fullcalendar-2.1.1/lib/jquery.min.js"></script> -->
-<!-- <script src="http://fullcalendar.io/js/fullcalendar-2.1.1/lib/jquery-ui.custom.min.js"></script> -->
 <script src="http://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.1.0/fullcalendar.js"></script>
 <script src="https://dl.dropboxusercontent.com/s/96w8t0jng58rsyy/main.js?dl=1"></script> <!--Core js-->
 <script src="https://dl.dropboxusercontent.com/s/ydkr12hihtuzfm2/interaction_main.js?dl=1"></script> <!--Interaction main js-->
@@ -29,12 +27,7 @@
 
 
 <script>
-
   // https://stackoverflow.com/questions/10840084/create-event-with-fullcalendar-when-clicking-on-calendar-rails
-
-
-
-
   /* Function to get all the records for an object*/
 function getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData,start, currentPage = 1, totalPages, allRecordsForObject = []) {
   if (!sceneKey || !viewKey) {
@@ -188,81 +181,10 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
         data: JSON.stringify(payload),
         success:function(responseData) {
           console.log("Record updated!");
-          // window.location.reload();
-
-          // var container = document.getElementById("scheduler");
-          // container.innerHTML= ''; 
-          // var start = moment($("#from").val());
-          // getAllRecordsForObject("scene_7", "view_69", handleData, start = start);
-          // reload()
         }
     }); // End ajax
   } // End updateData
 
-  function createData(name, title, from, to){
-    var post_url = "https://api.knack.com/v1/objects/object_6/records/";
-
-    var payload = new Object()
-
-    var from_am_pm = from.utc().format("A")
-    var from_minute = from.utc().format("mm")
-    var from_hour = from.utc().format("hh")
-    var from_date = from.utc().format("MM/DD/YYYY")
-
-    var to_am_pm = to.utc().format("A")
-    var to_minute = to.utc().format("mm")
-    var to_hour = to.utc().format("hh")
-    var to_date = to.utc().format("MM/DD/YYYY")
-
-    payload.field_57 = name
-    payload.field_61 = title
-
-      payload.field_58 = {
-          am_pm:from_am_pm,
-          date:from_date,
-          hours:from_hour,
-          minutes:from_minute,
-          to:{
-            am_pm:to_am_pm,
-            date:to_date,
-            hours:to_hour,
-            minutes:to_minute,
-          }
-      }
-      
-      payload.field_67 = {
-          am_pm:from_am_pm,
-          date:from_date,
-          hours:from_hour,
-          minutes:from_minute,
-          to:{
-            am_pm:to_am_pm,
-            date:to_date,
-            hours:to_hour,
-            minutes:to_minute,
-          } // End to
-      } // End main object
-
-     $.ajax({
-        url: post_url,
-        type: "POST",
-        headers: {
-          "X-Knack-Application-ID": "5c93c4d50fbcdf5726ae5439",
-          "X-Knack-REST-API-Key": "e46f6190-4bfb-11e9-9d62-3b671224caf2",
-          "content-type": "application/json"
-        },
-        data: JSON.stringify(payload),
-        success:function(responseData) {
-          console.log("Record updated!");
-          // var container = document.getElementById("scheduler");
-          // container.innerHTML= ''; 
-          // var start = moment($("#from").val());
-          // getAllRecordsForObject("scene_7", "view_69", handleData, start = start);
-          // reload()
-        }
-    }); // End ajax
-  } // End createData
-  
 
   let people = []
   let events = []
@@ -274,9 +196,6 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
   }
   constraints_scheduled = [...new Set(constraints_scheduled)] // Remove duplicates
   constraints_actual = [...new Set(constraints_actual)]
-
-  console.log(constraints_scheduled)
-  console.log(constraints_actual)
 
   var c = 0;
   for (let d of data.entries()){ // Construct the JSON payload for the calendar
@@ -301,7 +220,9 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
                  start: parse_iso(d[1].field_58_raw.iso_timestamp),//Field_58 is the scheduled time
                  end: parse_iso(d[1].field_58_raw.to.iso_timestamp),
                  title: d[1].field_61, // Field_61 is the title (whats displayed inside the bar)
+                 textColor:'#FFFFFF',
                  color:"#4C4CFF", // Green
+                 borderColor:'black',
                  record_id:d[1].id,
                  constraint: {
                   resourceIds:constraints_scheduled
@@ -312,12 +233,14 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
                  start: parse_iso(d[1].field_67_raw.iso_timestamp), //Field_67 is the actual time
                  end: parse_iso(d[1].field_67_raw.to.iso_timestamp),
                  title: d[1].field_61,
+                 textColor:'#FFFFFF',
                  color: "#4CA64C", // Red
+                 borderColor:'black',
                  record_id:d[1].id,
                  constraint: {
                   resourceIds:constraints_actual
                  }
-                })
+            })
     c += 1;
   }
   console.log(events)
@@ -345,31 +268,32 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
         duration: { hours: 8 },
         buttonText: "15 minutes",
         selectable: true,
-
       }
     },
-    eventOverlap: false,
+    eventOverlap: true,
     resourceLabelText: "People",
     select: function(info) {
-                // Display the modal.
-                // You could fill in the start and end fields based on the parameters
-                console.log(info.resource._resource.parentId)
-                // document.getElementById("update-event").style.visibility = "hidden";
+                // console.log(info.resource._resource.parentId)
+                // console.log(info)
+                document.getElementById("update-event").style.visibility = "hidden";
                 $('.modal').modal('show');
+                $('#modal_header').text("Create New Event")
                 $('.modal').find('#starts-at').val(moment(info.startStr).utc());
                 $('.modal').find('#ends-at').val(moment(info.endStr).utc());
 
                 $('#save-event').click(function(e) {
-                  e.preventDefault()
+                  e.preventDefault() // Need this or otherwise it will do multiple inserts for some retarded reason
                   e.stopImmediatePropagation();
-                  var name = info.resource._resource.parentId;
+                  var name;
+                  if(info.resource._resource.parentId === ""){
+                    name = info.resource._resource.id
+                  }else{
+                    name = info.resource._resource.parentId;
+                  }
+                  console.log(name)
                   var title = $('.modal').find('#title').val()
                   var from = moment($('.modal').find('#starts-at').val())
                   var to = moment($('.modal').find('#ends-at').val())
-                  console.log(title)
-                  // console.log(info.resource._resource.parentId)
-                  // const record_id = info.event._def.extendedProps.record_id
-                  // createData(name, title, moment($('.modal').find('#starts-at').val()),moment($('.modal').find('#ends-at').val()))
                   var post_url = "https://api.knack.com/v1/objects/object_6/records/";
 
                   var payload = new Object()
@@ -426,22 +350,18 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
                       success:function(responseData) {
                         console.log("Record added!");
                         $('.modal').modal('hide');
-                        // var container = document.getElementById("scheduler");
-                        // container.innerHTML= ''; 
-                        // var start = moment($("#from").val());
-                        // reload()
-                        // window.location.reload();
+                        document.getElementById('reload').click()
                       }
                   })// End ajax
-                  }); 
-                  // reload()
-            },
+              }); // reload()
+          },
     resources:  [JSON.parse(JSON.stringify(people))][0],
     events: [JSON.parse(JSON.stringify(events))][0],
     eventDrop: function(info) {
         var regex = /_(.*)/gim
         var type = info.event._def.resourceIds[0].match(regex)[0].slice(1,) // Get just "Actual" or "Scheduled"
         const record_id = info.event._def.extendedProps.record_id
+        console.log(record_id)
         var title = info.event.title
         if (!confirm("Are you sure about this change?")) {
           info.revert();
@@ -462,16 +382,15 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
       } // End confirm else
     }, // End Event resize
     eventClick: function(info) {
-                // document.getElementById("save-event").style.visibility = "hidden";
+                document.getElementById("save-event").style.visibility = "hidden";
                 $('.modal').modal('show');
                 $('.modal').find('#title').val(info.event.title);
+                $('#modal_header').text("Edit Event")
                 $('.modal').find('#starts-at').val(moment(info.event.start).utc());
                 $('.modal').find('#ends-at').val(moment(info.event.end).utc());
                 const record_id = info.event._def.extendedProps.record_id
                 const url = "https://api.knack.com/v1/objects/object_6/records/" + record_id;
                 $('#delete-event').click(function(e) {
-                  // e.preventDefault();
-                  // e.stopImmediatePropagation();
                   $.ajax({
                   url: url,
                   type: "DELETE",
@@ -484,15 +403,10 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
                   success:function(responseData) {
                     console.log("Record deleted!");
                     $('.modal').modal('hide');
-                    // var container = document.getElementById("scheduler");
-                    // container.innerHTML= ''; 
-                    // var start = moment($("#from").val());
-                    // getAllRecordsForObject("scene_7", "view_69", handleData, start = start);
-                    // reload()
-                    // window.location.reload();
-
+                    document.getElementById('reload').click()
                   }
-              })// End ajax 
+              })// End ajax
+
             });    
   
           $('#update-event').click(function(e) {
@@ -502,12 +416,68 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
                 var regex = /_(.*)/gim
                 var type = info.event._def.resourceIds[0].match(regex)[0].slice(1,) // Get just "Actual" or "Scheduled"
                 var title = $('.modal').find('#title').val()
-                // createData(record_id, type, moment($('.modal').find('#starts-at').val()),moment($('.modal').find('#ends-at').val()),title)
-                updateData(record_id, type, moment($('.modal').find('#starts-at').val()),moment($('.modal').find('#ends-at').val()),title)
-                $('.modal').modal('hide');
-                // reload()
-          }); // End Save click
+                var from = moment($('.modal').find('#starts-at').val())
+                var to = moment($('.modal').find('#ends-at').val())
+                var payload = new Object()
+                
+                var from_am_pm = from.utc().format("A")
+                var from_minute = from.utc().format("mm")
+                var from_hour = from.utc().format("hh")
+                var from_date = from.utc().format("MM/DD/YYYY")
 
+                var to_am_pm = to.utc().format("A")
+                var to_minute = to.utc().format("mm")
+                var to_hour = to.utc().format("hh")
+                var to_date = to.utc().format("MM/DD/YYYY")
+
+                payload.field_61 = title
+                if(type === "Scheduled"){
+                  console.log("Scheduled Updated")
+                  payload.field_58 = {
+                      am_pm:from_am_pm,
+                      date:from_date,
+                      hours:from_hour,
+                      minutes:from_minute,
+                      to:{
+                        am_pm:to_am_pm,
+                        date:to_date,
+                        hours:to_hour,
+                        minutes:to_minute,
+                      }
+                  }
+                  
+                }else{
+                  console.log("Actual Updated")
+                  payload.field_67 = {
+                      am_pm:from_am_pm,
+                      date:from_date,
+                      hours:from_hour,
+                      minutes:from_minute,
+                      to:{
+                        am_pm:to_am_pm,
+                        date:to_date,
+                        hours:to_hour,
+                        minutes:to_minute,
+                      } // End to
+                  } // End main object
+                } // End else
+
+                 $.ajax({
+                    url: put_url,
+                    type: "PUT",
+                    headers: {
+                      "X-Knack-Application-ID": "5c93c4d50fbcdf5726ae5439",
+                      "X-Knack-REST-API-Key": "e46f6190-4bfb-11e9-9d62-3b671224caf2",
+                      "content-type": "application/json"
+                    },
+                    data: JSON.stringify(payload),
+                    success:function(responseData) {
+                      console.log("Record updated!");
+                      document.getElementById('reload').click()
+                    }
+                }); // End ajax
+                $('.modal').modal('hide');
+          }); // End Save click
         }, // End event click
   }); // End calendar instantiation
 
@@ -516,8 +486,6 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
 
   $(document).ready(function() {
     $("#date-submit").click(function (e){
-      // e.preventDefault()
-      // e.stopImmediatePropagation();
       var start = moment($("#from").val());
       getAllRecordsForObject("scene_7", "view_69", handleData, start = start);
     });
@@ -525,13 +493,15 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
       e.preventDefault()
       e.stopImmediatePropagation();
       var start  = $('#from').val()
-      localStorage.setItem("from", start);
+      if (start != null){
+        sessionStorage.setItem("from", start);
+      }
       window.location.reload(); 
     });
-      var from = moment(localStorage.getItem("from")).utc().format('YYYY-MM-DD');
+      var from = moment(sessionStorage.getItem("from")).utc().format('YYYY-MM-DD');
       document.getElementById('from').value = from
       document.getElementById('date-submit').click()
-      localStorage.removeItem("from");
+      // sessionStorage.removeItem("from");
   });
 
 </script>
@@ -565,31 +535,17 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
     From:
     <input type="date" name="from" min="2015-01-01" id="from" required><br><br>
     <button type="button" class="btn btn-primary" id="date-submit">Submit</button>
-    <!-- <input type="button" class="btn btn-primary" value="Click to Refresh" id="reload" onclick="reload()"/> -->
-    <!-- <a href="javascript: reload()" class="btn btn-secondary" id="reload">Click to Reload</a> -->
     <button type="button" class="btn btn-secondary" id="reload">Click to Reload</button>
   </form>
   <br />
   <div id="scheduler"></div>
-  <script>
-    
-    function reload(){
-        // var container = document.getElementById("scheduler");
-        // // var content = container.innerHTML;
-        // container.innerHTML= ''; 
-        var start = moment($("#from").val()); 
-        getAllRecordsForObject("scene_7", "view_69", handleData, start = start);
-       //this line is to watch the result in console , you can remove it later  
-        console.log("Refreshed");
-        return
-    }
-  </script>
+
 <div class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-            <div class="modal-header col-12">
+            <div class="modal-header col-12" >
                 <button type="button" class="close col-4" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title col-12">Create new event</h4>
+                <h4 class="modal-title col-12" id="modal_header">Create new event</h4>
             </div>
             <div class="modal-body">
                 <div class="row">
