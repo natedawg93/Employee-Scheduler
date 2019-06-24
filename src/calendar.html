@@ -11,11 +11,12 @@
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"> <!--bootstrap css-->
 
 <script src="https://code.jquery.com/jquery-3.4.1.js"></script> <!--jquery cdn-->
-<script src="https://unpkg.com/tooltip.js"></script> <!--tooltip cdn-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.js"></script> <!--moment js cdn-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script> <!--bootstrap js-->
 <script src="http://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.1.0/fullcalendar.js"></script>
+<script src="https://unpkg.com/popper.js"></script> <!--popper cdn-->
+<script src="https://unpkg.com/tooltip.js"></script> <!--tooltip cdn-->
 <script src="https://dl.dropboxusercontent.com/s/96w8t0jng58rsyy/main.js?dl=1"></script> <!--Core js-->
 <script src="https://dl.dropboxusercontent.com/s/ydkr12hihtuzfm2/interaction_main.js?dl=1"></script> <!--Interaction main js-->
 <script src="https://dl.dropboxusercontent.com/s/ivp8qfg7cu0azql/daygrid_main.js?dl=1"></script> <!--daygrid js-->
@@ -27,6 +28,26 @@
 
 
 <script>
+  function shadeColor(color, percent) {
+
+    var R = parseInt(color.substring(1,3),16);
+    var G = parseInt(color.substring(3,5),16);
+    var B = parseInt(color.substring(5,7),16);
+
+    R = parseInt(R * (100 + percent) / 100);
+    G = parseInt(G * (100 + percent) / 100);
+    B = parseInt(B * (100 + percent) / 100);
+
+    R = (R<255)?R:255;  
+    G = (G<255)?G:255;  
+    B = (B<255)?B:255;  
+
+    var RR = ((R.toString(16).length==1)?"0"+R.toString(16):R.toString(16));
+    var GG = ((G.toString(16).length==1)?"0"+G.toString(16):G.toString(16));
+    var BB = ((B.toString(16).length==1)?"0"+B.toString(16):B.toString(16));
+
+    return "#"+RR+GG+BB;
+}
   // https://stackoverflow.com/questions/10840084/create-event-with-fullcalendar-when-clicking-on-calendar-rails
   /* Function to get all the records for an object*/
 function getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData,start, currentPage = 1, totalPages, allRecordsForObject = []) {
@@ -199,6 +220,8 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
 
   var c = 0;
   for (let d of data.entries()){ // Construct the JSON payload for the calendar
+  var scheduledColor = '#' +'0123456789abcdef'.split('').map(function(v,i,a){
+                                  return i>5 ? null : a[Math.floor(Math.random()*16)] }).join('');
     people.push({
                  id: d[1].field_57, //Field_57 is the name. We are matching multiple tasks for the same person based on the name.
                  // This is ok because the name is a list of pre-set values
@@ -221,7 +244,7 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
                  end: parse_iso(d[1].field_58_raw.to.iso_timestamp),
                  title: d[1].field_61, // Field_61 is the title (whats displayed inside the bar)
                  textColor:'#FFFFFF',
-                 color:"#4C4CFF", // Green
+                 color:scheduledColor, // Green
                  borderColor:'black',
                  record_id:d[1].id,
                  constraint: {
@@ -234,7 +257,7 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
                  end: parse_iso(d[1].field_67_raw.to.iso_timestamp),
                  title: d[1].field_61,
                  textColor:'#FFFFFF',
-                 color: "#4CA64C", // Red
+                 color: shadeColor(scheduledColor, 5), // Red
                  borderColor:'black',
                  record_id:d[1].id,
                  constraint: {
@@ -248,7 +271,7 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
   var calendar = new FullCalendar.Calendar(calendarEl, {
     timeZone: "UTC",
     schedulerLicenseKey: "GPL-My-Project-Is-Open-Source",
-    plugins: [ "interaction", "dayGrid", "timeGrid", "list", "resourceTimeline" ],
+    plugins: [ "interaction", "dayGrid", "timeGrid", "list", "resourceTimeline", "resourceTimelinePlugin" ],
     //now: String(today),
     now: $("#from").val(),
     editable: true, // enable draggable events
@@ -274,8 +297,7 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
     resourceLabelText: "People",
     select: function(info) {
                 // console.log(info.resource._resource.parentId)
-                // console.log(info)
-                document.getElementById("update-event").style.visibility = "hidden";
+                console.log(info)
                 $('.modal').modal('show');
                 $('#modal_header').text("Create New Event")
                 $('.modal').find('#starts-at').val(moment(info.startStr).utc());
@@ -357,6 +379,11 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
           },
     resources:  [JSON.parse(JSON.stringify(people))][0],
     events: [JSON.parse(JSON.stringify(events))][0],
+    textColor: "#FFFFFF",
+    eventRender: function(event, element) {
+      $(element).tooltip({title: event.title});
+                   
+  },
     eventDrop: function(info) {
         var regex = /_(.*)/gim
         var type = info.event._def.resourceIds[0].match(regex)[0].slice(1,) // Get just "Actual" or "Scheduled"
@@ -382,7 +409,6 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
       } // End confirm else
     }, // End Event resize
     eventClick: function(info) {
-                document.getElementById("save-event").style.visibility = "hidden";
                 $('.modal').modal('show');
                 $('.modal').find('#title').val(info.event.title);
                 $('#modal_header').text("Edit Event")
