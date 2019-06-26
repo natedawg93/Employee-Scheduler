@@ -2,16 +2,17 @@
 <html>
 <head>
 <meta charset="utf-8" />
- <link href="https://dl.dropboxusercontent.com/s/thqhda8nk5xl4ac/main.css?dl=1" rel="stylesheet" /> <!-- Core css --> 
- <link href="https://dl.dropboxusercontent.com/s/c6rm95oyq8zzjrz/daygrid_main.css?dl=1" rel="stylesheet" /> <!-- daygrid css --> 
- <link href="https://dl.dropboxusercontent.com/s/7qsnp5072jddkbj/timegrid_main.css?dl=1" rel="stylesheet" /> <!--timegrid css -->
- <link href="https://dl.dropboxusercontent.com/s/7nl45exb3rkwej3/list_main.css?dl=1" rel="stylesheet" /> <!--list css -->
- <link href="https://dl.dropboxusercontent.com/s/inrtwvxx75qm2rs/timeline_main.css?dl=1" rel="stylesheet" /> <!-- timeline css --> 
+<link href="https://dl.dropboxusercontent.com/s/thqhda8nk5xl4ac/main.css?dl=1" rel="stylesheet" /> <!-- Core css --> 
+<link href="https://dl.dropboxusercontent.com/s/c6rm95oyq8zzjrz/daygrid_main.css?dl=1" rel="stylesheet" /> <!-- daygrid css --> 
+<link href="https://dl.dropboxusercontent.com/s/7qsnp5072jddkbj/timegrid_main.css?dl=1" rel="stylesheet" /> <!--timegrid css -->
+<link href="https://dl.dropboxusercontent.com/s/7nl45exb3rkwej3/list_main.css?dl=1" rel="stylesheet" /> <!--list css -->
+<link href="https://dl.dropboxusercontent.com/s/inrtwvxx75qm2rs/timeline_main.css?dl=1" rel="stylesheet" /> <!-- timeline css --> 
 <link href="https://dl.dropboxusercontent.com/s/04pcb19x53ua8js/resource_timeline_main.css?dl=1" rel="stylesheet" /> <!-- resource timeline css -->
- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"> <!--bootstrap css-->
- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.10/css/bootstrap-select.css"> <!--bootstrap select css-->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"> <!--bootstrap css-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.10/css/bootstrap-select.css"> <!--bootstrap select css-->
 
 <script src="https://code.jquery.com/jquery-3.4.1.js"></script> <!--jquery cdn-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.2/d3.js"></script> <!--d3 cdn-->
 <script src="https://unpkg.com/popper.js"></script> <!--popper cdn-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.js"></script> <!--moment js cdn-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
@@ -20,19 +21,18 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.0/fullcalendar.js"></script>
 <script src="https://unpkg.com/tooltip.js"></script> <!--tooltip cdn-->
 
- <script src="https://dl.dropboxusercontent.com/s/96w8t0jng58rsyy/main.js?dl=1"></script> <!-- Core js  -->
- <script src="https://dl.dropboxusercontent.com/s/5rimyc4uflq16w4/resource_timegrid_main.js?dl=1"></script> <!-- Resource Timegrid js --> 
- <script src="https://dl.dropboxusercontent.com/s/ydkr12hihtuzfm2/interaction_main.js?dl=1"></script><!--  Interaction main js -->
- <script src="https://dl.dropboxusercontent.com/s/zax6yugh1lrg1td/luxon_main.js?dl=1"></script><!--  Luxon main js -->
- <script src="https://dl.dropboxusercontent.com/s/ivp8qfg7cu0azql/daygrid_main.js?dl=1"></script> <!-- daygrid js -->
- <script src="https://dl.dropboxusercontent.com/s/02zuvaflwou5ih3/timegrid_main.js?dl=1"></script> <!-- timegrid js -->
+<script src="https://dl.dropboxusercontent.com/s/96w8t0jng58rsyy/main.js?dl=1"></script> <!-- Core js  -->
+<script src="https://dl.dropboxusercontent.com/s/5rimyc4uflq16w4/resource_timegrid_main.js?dl=1"></script> <!-- Resource Timegrid js --> 
+<script src="https://dl.dropboxusercontent.com/s/ydkr12hihtuzfm2/interaction_main.js?dl=1"></script><!--  Interaction main js -->
+<script src="https://dl.dropboxusercontent.com/s/zax6yugh1lrg1td/luxon_main.js?dl=1"></script><!--  Luxon main js -->
+<script src="https://dl.dropboxusercontent.com/s/ivp8qfg7cu0azql/daygrid_main.js?dl=1"></script> <!-- daygrid js -->
+<script src="https://dl.dropboxusercontent.com/s/02zuvaflwou5ih3/timegrid_main.js?dl=1"></script> <!-- timegrid js -->
 <script src="https://dl.dropboxusercontent.com/s/bij4kyj0dab0wsx/list_main.js?dl=1"></script> <!-- list js -->
 <script src="https://dl.dropboxusercontent.com/s/dtq2qpbpe11gapn/timeline_main.js?dl=1"></script> <!-- timeline js -->
 <script src="https://dl.dropboxusercontent.com/s/7gv2k4s69j7kzhh/rrule_main.js?dl=1"></script> <!-- rrule js -->
- <script src="https://dl.dropboxusercontent.com/s/3ocwfmn1gr9ajwd/resource_common_main.js?dl=1"></script> <!--resource common js-->
- <script src="https://dl.dropboxusercontent.com/s/7m8eixl1zxtdj9t/resource_timeline_main.js?dl=1"></script> <!--resource timeline js -->
- <script src="https://dl.dropboxusercontent.com/s/8z6iema239bg67g/resource_daygrid_main.js?dl=1"></script> <!--resource daygrid js -->
- <script src="https://dl.dropboxusercontent.com/s/5rimyc4uflq16w4/resource_timegrid_main.js?dl=1"></script> <!--resource timegrid js -->
+<script src="https://dl.dropboxusercontent.com/s/3ocwfmn1gr9ajwd/resource_common_main.js?dl=1"></script> <!--resource common js-->
+<script src="https://dl.dropboxusercontent.com/s/7m8eixl1zxtdj9t/resource_timeline_main.js?dl=1"></script> <!--resource timeline js -->
+<script src="https://dl.dropboxusercontent.com/s/8z6iema239bg67g/resource_daygrid_main.js?dl=1"></script> <!--resource daygrid js -->
 
 
 <script>
@@ -72,7 +72,6 @@ function getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData,
   filters.match = "or"
   filters.rules = new Array()
   start = moment(start, 'MM/DD/YYYY')
-
 
   for (let i of [0,1,2,3,4,5,6]){
     filters.rules.push({
@@ -512,6 +511,28 @@ function updateData(record_id, type, from, to, title){
     return new Date(year, day, month); 
   };
 
+  // Function to filter the data by station
+  function filterLocation(location,data){ 
+      var station = sessionStorage.getItem("selection")
+      $('select[name=selValue]').selectpicker();
+      if (station === 'undefined' || station === null){
+        station = $('select[name=selValue] option:first').val();
+        $('select[name=selValue]').val(station);
+        $('select[name=selValue]').selectpicker('refresh');
+      }
+      // TODO: Exception handling for no location
+      var filteredData = [];
+      for(var index in data) {
+        var obj = data[index];
+        if(obj.field_77_raw[0].identifier === location && obj.field_78_raw[0].identifier === station)
+        {
+          filteredData.push(obj)
+        }
+      }
+    return filteredData;
+  }
+
+
   // Function to filter the data by scheduled date
   function filterDate(startDate,endDate,data){ 
     var filteredData = [];
@@ -526,32 +547,43 @@ function updateData(record_id, type, from, to, title){
 
 function handleData(allRecordsForObject, start, sceneKey, viewKey) {
   let data = allRecordsForObject
-  console.log(data)
-  
-  /* Begin code for calendar */
+  // console.log(data)
+  data = filterLocation("SBU",data)
+  // filterLocation("SBU",data)
   if (!Array.isArray(data) || !data.length) {
     alert("No data found for range");
     return
   }
+    d3.csv("https://dl.dropboxusercontent.com/s/kt55xo9jqnyjw3d/Names_emails_csv.csv?dl=1").then(function(data) {
+    emails = data
+    setStations(data)
+  });
   makeCalendar(data)
-} // End function handle data
+}
+
+function setStations(emails){
+  var campus, stations = [];
+  emails.forEach( function(e, index) {
+      campus = e.Campus
+      switch(e.Email){
+        case "mmorgan@freshideasfood.com":
+        // case "amathes@freshideasfood.com":
+          stations.push(['Stars', 'Susies','Residential Dining Hall','Kaldis'])
+          break;
+      }
+   });
+  console.log(campus)
+  console.log(stations)
+}
 
 $(document).ready(function() {
-  
-    $('<option value="test1">test1</option>').appendTo(".selectpicker");
     $('#main-select').change(function() {
       sessionStorage.setItem('selection', this.value); //$(this).val()
-      // console.log('works')
     });
+
     $("#date-submit").click(function (e){
       $("#scheduler").empty()
       var start = moment($("#from").val());
-      if (selection === 'Please'){
-        alert("Please select a value")
-        $('.selectpicker').selectpicker('val',1);
-      }else{
-        $('.selectpicker').selectpicker('val',selection);
-      }
       getAllRecordsForObject("scene_7", "view_69", handleData, start = start);
     });
 
@@ -564,14 +596,12 @@ $(document).ready(function() {
       }
       window.location.reload(); 
     });
-      var from = moment(sessionStorage.getItem("from")).utc().format('YYYY-MM-DD');
-      var selection = sessionStorage.getItem("selection")
-      document.getElementById('from').value = from
-      console.log(selection)
-    $('.selectpicker').selectpicker('val',0);
 
-      console.log($('.selectpicker').selectpicker('value'))
-      document.getElementById('date-submit').click()
+    var from = moment(sessionStorage.getItem("from")).utc().format('YYYY-MM-DD');
+    var selection = sessionStorage.getItem("selection")
+    document.getElementById('from').value = from
+    $('.selectpicker').selectpicker('val', selection)
+    document.getElementById('date-submit').click()
   });
 
 </script>
@@ -612,11 +642,10 @@ $(document).ready(function() {
     </form>
     <br/>
 
-    <select class="selectpicker" id="main-select">
-      <option value="" selected disabled>Please select</option>
-      <option>test2</option>
-      <option>test3</option>
-      <option>test4</option>
+    <select name="selValue" class="selectpicker" id="main-select">
+      <option>Bobcat Den</option>
+      <option>Kaldis</option>
+      <!-- <option>test4</option> -->
     </select>
     <br/>
     <br/>
