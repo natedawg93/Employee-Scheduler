@@ -15,7 +15,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.2/d3.js"></script> <!--d3 cdn-->
 <script src="https://unpkg.com/popper.js"></script> <!--popper cdn-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.js"></script> <!--moment js cdn-->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script> <!--bootstrap js-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.10/js/bootstrap-select.js"></script> <!--bootstrap select js-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.0/fullcalendar.js"></script>
@@ -166,7 +165,7 @@ function makeCalendar(data){
                  end: parse_iso(d[1].field_58_raw.to.iso_timestamp),
                  title: d[1].field_61, // Field_61 is the title (whats displayed inside the bar)
                  textColor:'#FFFFFF',
-                 color:scheduledColor, // Green
+                 color:scheduledColor,
                  borderColor:'black',
                  record_id:d[1].id,
                  constraint: {
@@ -180,7 +179,7 @@ function makeCalendar(data){
                  end: parse_iso(d[1].field_67_raw.to.iso_timestamp),
                  title: d[1].field_61,
                  textColor:'#FFFFFF',
-                 color: shadeColor(scheduledColor, 5), // Red
+                 color: shadeColor(scheduledColor, 5),
                  borderColor:'black',
                  record_id:d[1].id,
                  constraint: {
@@ -254,7 +253,6 @@ function makeCalendar(data){
       } // End confirm else
     }, // End Event resize
     eventClick: function(info) {
-
         $('.modal').modal('show');
         $('.modal').find('#title').val(info.event.title);
         $('#modal_header').text("Edit Event")
@@ -814,12 +812,6 @@ $(document).ready(function() {
                     <div class="col-12">
                         <label class="col-4" for="station">Station</label>
                         <select name="selValue2" class="selectpicker" id="modal-select" required></select>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12">
-                        <label class="col-4" for="actual-color">Color</label>
-                        <input class="jscolor" id="actual-color" style="zIndex: 1080;" />
                     </div>
                 </div>
             </div>

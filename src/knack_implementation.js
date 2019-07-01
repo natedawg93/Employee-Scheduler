@@ -5,11 +5,12 @@ var css_files =['https://dl.dropboxusercontent.com/s/thqhda8nk5xl4ac/main.css?dl
                 'https://dl.dropboxusercontent.com/s/inrtwvxx75qm2rs/timeline_main.css?dl=1',
                 'https://dl.dropboxusercontent.com/s/04pcb19x53ua8js/resource_timeline_main.css?dl=1',
                 "https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css",// Bootstrap css
-               "https://unpkg.com/tabulator-tables@4.2.7/dist/css/tabulator.min.css", // Tabulator css
-               "https://use.fontawesome.com/releases/v5.8.2/css/all.css"]; // fontawesome
+                "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.10/css/bootstrap-select.css", // Bootstrap select CSS
+                "https://unpkg.com/tabulator-tables@4.2.7/dist/css/tabulator.min.css", // Tabulator css
+                "https://use.fontawesome.com/releases/v5.8.2/css/all.css"]; // fontawesome
 
-var js_files = ["https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js", // Bootstrap js
-                "https://code.jquery.com/jquery-3.4.1.js", // jQuery
+var js_files = ["https://code.jquery.com/jquery-3.4.1.js", // jQuery
+                "https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js", // Bootstrap js
                'https://dl.dropboxusercontent.com/s/96w8t0jng58rsyy/main.js?dl=1',
                'https://dl.dropboxusercontent.com/s/ydkr12hihtuzfm2/interaction_main.js?dl=1',
                'https://dl.dropboxusercontent.com/s/ivp8qfg7cu0azql/daygrid_main.js?dl=1',
@@ -28,21 +29,28 @@ LazyLoad.js(js_files, function () { // Load all the JS files using LazyLoad
     console.log('Loaded all JS files');
 });
 
-$(document).on('knack-view-render.view_69',function(event, scene) { // View 69 is the tasks list view
-  $('#view_69').append(`<div class='form-container' style='margin: 0 auto;'><form id="date-range">
+$(document).one('knack-view-render.view_69',function(event, scene) { // View 69 is the tasks list view
+  console.log(Knack.getUserAttributes())
+  $('#kn-scene_7').prepend(`<div class='form-container' style='margin: 0 auto;'><form id="date-range">
           From:
           <input type="date" name="from" min="2015-01-01" id="from" required><br><br>
           <button type="button" class="btn btn-primary" id="date-submit">Submit</button>
       </form></div>`)
       
   $('#date-submit').on('click', function (){
+    $("#scheduler").empty()
+    $("#main-table").empty()
     var start = moment($('#from').val());
     var end = moment(start).add(7,'days')
     getAllRecordsForObject('scene_7', 'view_69', handleData,start,end); // Get all the records for the specific scene and view
-
-    $( "#view_69" ).append( "<div id='scheduler'></div>" ); // Add the calendar div to the end of the view's div. Without this, it renders the calendar on all pages
-    $( "#view_69" ).append( "<div id='main-table'></div>" );
+  $( "#kn-scene_7" ).prepend( "<div id='main-table'></div>" );
+    $( "#kn-scene_7" ).prepend( "<div id='scheduler'></div>" ); // Add the calendar div to the end of the view's div. Without this, it renders the calendar on all pages
+    $('#date-submit').prop('disabled', true);
   });
+  
+    $("input").change(function(){
+    $('#date-submit').prop('disabled', false);
+   });
 });
 
 function groupBy(items, properties, collect) {
@@ -54,6 +62,7 @@ function groupBy(items, properties, collect) {
 
   return groups;
 }
+
 
 function _groupBy(items, properties) {
   var group = {};
@@ -241,6 +250,7 @@ function handleData(allRecordsForObject, start, end) {
   });
 
   calendar.render();
+
   /* End code for calendar */
   
   /* Begin code for Table */
