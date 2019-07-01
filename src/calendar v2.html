@@ -56,6 +56,22 @@
 
     return "#"+RR+GG+BB;
 }
+
+function getStationId(location){
+  var stationIds = 
+        {
+            "Susies": "5d1a42eadcc367000b4dce06",
+            "Stars": "5d1a42e64e6643000a16366b",
+            "Bobcat Den": "5d11394d6c7a9f000a5d8864",
+            "Starbucks": "5d1122c9a280d0000bd47efe",
+            "Kaldis": "5d1122c4cd6e18000a707cb7",
+            "Residential Dining Hall": "5d1122be6da793000a404ad8",
+            "Stephens College": "5d113925191a58000c269807",
+            "SBU": "5d1122d73ac2f1000baeb1af",
+        }
+      return stationIds[location]
+  }
+
   // https://stackoverflow.com/questions/10840084/create-event-with-fullcalendar-when-clicking-on-calendar-rails
   /* Function to get all the records for an object*/
 function getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData,start, currentPage = 1, totalPages, allRecordsForObject = []){
@@ -120,7 +136,6 @@ function saveEventClick(info)
     }else{
       name = info.resource._resource.parentId;
     }
-    console.log(name)
     var title = $('.modal').find('#title').val()
     var from = moment($('.modal').find('#starts-at').val())
     var to = moment($('.modal').find('#ends-at').val())
@@ -232,7 +247,8 @@ function makeCalendar(data){
                  record_id:d[1].id,
                  constraint: {
                   resourceIds:constraints_scheduled
-                 }
+                 },
+                 station:d[1].field_78_raw[0].identifier
                 })
     events.push({id: String(c) + "_Actual",
                  resourceId: d[1].field_57 + "_Actual", 
@@ -245,8 +261,9 @@ function makeCalendar(data){
                  record_id:d[1].id,
                  constraint: {
                   resourceIds:constraints_actual
-                 }
-            })
+                 },
+                 station:d[1].field_78_raw[0].identifier
+                })
     c += 1;
   }
 
@@ -294,8 +311,8 @@ function makeCalendar(data){
         var regex = /_(.*)/gim
         var type = info.event._def.resourceIds[0].match(regex)[0].slice(1,) // Get just "Actual" or "Scheduled"
         var record_id = info.event._def.extendedProps.record_id
-        console.log(record_id)
         var title = info.event.title
+        var station;
         if (!confirm("Are you sure about this change?")) {
           info.revert();
         }else{
@@ -315,16 +332,19 @@ function makeCalendar(data){
       } // End confirm else
     }, // End Event resize
     eventClick: function(info) {
-                $('.modal').modal('show');
-                $('.modal').find('#title').val(info.event.title);
-                $('#modal_header').text("Edit Event")
-                $('.modal').find('#starts-at').val(moment(info.event.start).utc());
-                $('.modal').find('#ends-at').val(moment(info.event.end).utc());
-                var record_id = info.event._def.extendedProps.record_id
-                var url = "https://api.knack.com/v1/objects/object_6/records/" + record_id;
-                updateEventClick(info)
-                deleteEventClick(url)
-        }, // End event click
+
+        $('.modal').modal('show');
+        $('.modal').find('#title').val(info.event.title);
+        $('#modal_header').text("Edit Event")
+        $('.modal').find('#starts-at').val(moment(info.event.start).utc());
+        $('.modal').find('#ends-at').val(moment(info.event.end).utc());
+        $("#modal-select").selectpicker('val',info.event._def.extendedProps.station)
+        var record_id = info.event._def.extendedProps.record_id
+        var url = "https://api.knack.com/v1/objects/object_6/records/" + record_id;
+        var currentSelection; 
+        updateEventClick(info)
+        deleteEventClick(url)
+      }, // End event click
   }); // End calendar instantiation
 
   calendar.render();
@@ -367,6 +387,8 @@ function updateEventClick(info){
     var title = $('.modal').find('#title').val()
     var from = moment($('.modal').find('#starts-at').val())
     var to = moment($('.modal').find('#ends-at').val())
+    var station = $("#modal-select").val()
+    var stationId = getStationId(station)
     var payload = new Object()
     
     var from_am_pm = from.utc().format("A")
@@ -380,6 +402,12 @@ function updateEventClick(info){
     var to_date = to.utc().format("MM/DD/YYYY")
 
     payload.field_61 = title
+    payload.field_78 = [
+        {
+          "id":stationId,
+          "identifier":station
+        }
+    ]
     if(type === "Scheduled"){
       console.log("Scheduled Updated")
       payload.field_58 = {
@@ -520,15 +548,25 @@ function updateData(record_id, type, from, to, title){
         $('select[name=selValue]').val(station);
         $('select[name=selValue]').selectpicker('refresh');
       }
-      // TODO: Exception handling for no location
       var filteredData = [];
-      for(var index in data) {
-        var obj = data[index];
-        if(obj.field_77_raw[0].identifier === location && obj.field_78_raw[0].identifier === station)
-        {
-          filteredData.push(obj)
+
+      if (station === "All Stations"){
+        for(var index in data) {
+          var obj = data[index];
+          if(obj.field_77_raw[0].identifier === location)
+          {
+            filteredData.push(obj)
+          }
         }
-      }
+      } else{
+          for(var index in data) {
+            var obj = data[index];
+            if(obj.field_77_raw[0].identifier === location && obj.field_78_raw[0].identifier === station)
+            {
+              filteredData.push(obj)
+            }
+          }
+        }
     return filteredData;
   }
 
@@ -548,35 +586,74 @@ function updateData(record_id, type, from, to, title){
 function handleData(allRecordsForObject, start, sceneKey, viewKey) {
   let data = allRecordsForObject
   // console.log(data)
-  data = filterLocation("SBU",data)
-  // filterLocation("SBU",data)
+  var emails =   [
+    {
+      "nmahalingam@freshideasfood.com": "Corporate",
+      "pgentry@freshideasfood.com": "Corporate",
+      "blove@freshideasfood.com": "Corporate",
+      "amathes@freshideasfood.com": "Stephens College",
+      "clammers@freshideasfood.com": "Kappa Alpha Theta",
+      "wthacker@freshideasfood.com": "Maryville",
+      "acantrell@freshideasfood.com": "SBU",
+      "wtreadway@freshideasfood.com": "SBU",
+      "mmorgan@freshideasfood.com": "Stephens College",
+      "jutterback@freshideasfood.com": "MSSU",
+      "kblankenship@freshideasfood.com": "MSSU",
+      "bbeamer@freshideasfood.com": "Corporate",
+    }
+  ]
+
+
+  var userEmail = "mmorgan@freshideasfood.com"
+  var location  = emails[0][userEmail]
+  data = filterLocation(location,data) // Will be set dynamically based on email
+  setStations(userEmail)
   if (!Array.isArray(data) || !data.length) {
     alert("No data found for range");
     return
   }
-    d3.csv("https://dl.dropboxusercontent.com/s/kt55xo9jqnyjw3d/Names_emails_csv.csv?dl=1").then(function(data) {
-    emails = data
-    setStations(data)
-  });
+  console.log(data)
   makeCalendar(data)
 }
 
 function setStations(emails){
   var campus, stations = [];
-  emails.forEach( function(e, index) {
-      campus = e.Campus
-      switch(e.Email){
-        case "mmorgan@freshideasfood.com":
-        // case "amathes@freshideasfood.com":
-          stations.push(['Stars', 'Susies','Residential Dining Hall','Kaldis'])
-          break;
-      }
-   });
-  console.log(campus)
-  console.log(stations)
+    switch(emails){
+      case "mmorgan@freshideasfood.com":
+      case "amathes@freshideasfood.com":
+        campus = "Stephens College" 
+        stations= ['All Stations','Stars', 'Susies','Residential Dining Hall','Kaldis']
+        break;
+      case "acantrell@freshideasfood.com":
+      case "wtreadway@freshideasfood.com":
+        campus = "SBU" 
+        stations = ['All Stations','Residential Dining Hall','Kaldis', 'Bobcat Den']
+        break;
+    }
+    $("#campus").empty()
+    if (typeof campus !== 'undefined'){
+      $("#campus").append("Campus: "+campus)
+    } else {
+      $("#campus").append("Campus: ")
+    }
+  // localStorage.setItem('stations', null); //$(this).val()
+  // localStorage.clear();
+  // localStorage.removeItem("stations")
+
+  // var stations = JSON.parse(localStorage.getItem("stations"))
+  localStorage.setItem('stations', JSON.stringify(stations)); //$(this).val()
+  for(let c of stations){
+    var main_select = document.getElementById("main-select");
+    main_select.options[main_select.options.length] = new Option(c, c);
+  }
 }
 
 $(document).ready(function() {
+    d3.csv("https://dl.dropboxusercontent.com/s/kt55xo9jqnyjw3d/Names_emails_csv.csv?dl=1").then(function(data) {
+      setStations(data)
+    });
+
+
     $('#main-select').change(function() {
       sessionStorage.setItem('selection', this.value); //$(this).val()
     });
@@ -599,6 +676,20 @@ $(document).ready(function() {
 
     var from = moment(sessionStorage.getItem("from")).utc().format('YYYY-MM-DD');
     var selection = sessionStorage.getItem("selection")
+    var stations = JSON.parse(localStorage.getItem("stations"))
+    $("#main-select").empty();
+    $("#modal-select").empty();
+    var modal_select = document.getElementById("modal-select");
+    for(let c of stations){
+      console.log(c)
+      var main_select = document.getElementById("main-select");
+      main_select.options[main_select.options.length] = new Option(c, c);
+      modal_select.options[modal_select.options.length] = new Option(c, c);
+    }
+    modal_select.options[modal_select.options.length] = new Option("","")
+    $('#modal-select').children('option:first').remove();
+    $("option[value='']").attr("disabled", "disabled");
+    $("#modal-select").selectpicker('refresh')
     document.getElementById('from').value = from
     $('.selectpicker').selectpicker('val', selection)
     document.getElementById('date-submit').click()
@@ -634,6 +725,7 @@ $(document).ready(function() {
 </head>
 <body>
   <div class="container">
+    <h1 id='campus'></h1>
     <form id="date-range">
       From:
       <input type="date" name="from" min="2015-01-01" id="from" required><br><br>
@@ -642,11 +734,7 @@ $(document).ready(function() {
     </form>
     <br/>
 
-    <select name="selValue" class="selectpicker" id="main-select">
-      <option>Bobcat Den</option>
-      <option>Kaldis</option>
-      <!-- <option>test4</option> -->
-    </select>
+    <select name="selValue" class="selectpicker" id="main-select"></select>
     <br/>
     <br/>
 
@@ -679,13 +767,13 @@ $(document).ready(function() {
                         <input type="text" name="ends_at" id="ends-at" />
                     </div>
                 </div>
-                <!-- <div class="row">
+                <div class="row">
                     <div class="col-12">
-                        <label class="col-4" for="scheduled-color">Color</label>
-                        <input type="text" name="scheduled_color" id="scheduled-color" />
+                        <label class="col-4" for="station">Station</label>
+                        <select name="selValue2" class="selectpicker" id="modal-select" required></select>
                     </div>
                 </div>
-                <div class="row">
+<!--                 <div class="row">
                     <div class="col-12">
                         <label class="col-4" for="actual-color">Color</label>
                         <input type="text" name="actual_color" id="actual-color" />
@@ -698,9 +786,9 @@ $(document).ready(function() {
                 <button type="button" class="btn btn-primary" id="save-event">Add Task</button>
                 <button type="button" class="btn btn-primary" id="update-event">Update Task</button>
             </div>
-        </div><!-- /.modal-content 
-    </div><!-- /.modal-dialog
-</div><!-- /.modal 
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
 
 </body>
 </html>
