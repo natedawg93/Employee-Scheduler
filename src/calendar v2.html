@@ -20,6 +20,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.10/js/bootstrap-select.js"></script> <!--bootstrap select js-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.0/fullcalendar.js"></script>
 <script src="https://unpkg.com/tooltip.js"></script> <!--tooltip cdn-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jscolor/2.0.4/jscolor.js"></script> <!--js color cdn-->
 
 <script src="https://dl.dropboxusercontent.com/s/96w8t0jng58rsyy/main.js?dl=1"></script> <!-- Core js  -->
 <script src="https://dl.dropboxusercontent.com/s/5rimyc4uflq16w4/resource_timegrid_main.js?dl=1"></script> <!-- Resource Timegrid js --> 
@@ -125,84 +126,7 @@ function getAllRecordsForObject(sceneKey, viewKey, callbackFunctionToHandleData,
   });
 };
 
-function saveEventClick(info)
-{
-  $('#save-event').click(function(e) {
-    // e.stopImmediatePropagation();
-    e.preventDefault() // Need this or otherwise it will do multiple inserts for some retarded reason
-    var name;
-    if(info.resource._resource.parentId === ""){
-      name = info.resource._resource.id
-    }else{
-      name = info.resource._resource.parentId;
-    }
-    var title = $('.modal').find('#title').val()
-    var from = moment($('.modal').find('#starts-at').val())
-    var to = moment($('.modal').find('#ends-at').val())
-    var post_url = "https://api.knack.com/v1/objects/object_6/records/";
 
-    var payload = new Object()
-
-    var from_am_pm = from.utc().format("A")
-    var from_minute = from.utc().format("mm")
-    var from_hour = from.utc().format("hh")
-    var from_date = from.utc().format("MM/DD/YYYY")
-
-    var to_am_pm = to.utc().format("A")
-    var to_minute = to.utc().format("mm")
-    var to_hour = to.utc().format("hh")
-    var to_date = to.utc().format("MM/DD/YYYY")
-
-    payload.field_57 = name
-    payload.field_61 = title
-
-      payload.field_58 = {
-          am_pm:from_am_pm,
-          date:from_date,
-          hours:from_hour,
-          minutes:from_minute,
-          to:{
-            am_pm:to_am_pm,
-            date:to_date,
-            hours:to_hour,
-            minutes:to_minute,
-          }
-      }
-      
-      payload.field_67 = {
-          am_pm:from_am_pm,
-          date:from_date,
-          hours:from_hour,
-          minutes:from_minute,
-          to:{
-            am_pm:to_am_pm,
-            date:to_date,
-            hours:to_hour,
-            minutes:to_minute,
-          } // End to
-      } // End main object
-
-     $.ajax({
-        url: post_url,
-        type: "POST",
-        headers: {
-          "X-Knack-Application-ID": "5c93c4d50fbcdf5726ae5439",
-          "X-Knack-REST-API-Key": "e46f6190-4bfb-11e9-9d62-3b671224caf2",
-          "content-type": "application/json"
-        },
-        data: JSON.stringify(payload),
-        cache: false,
-        success:function(responseData) {
-          console.log("Record added!");
-          $('.modal').modal('hide');
-          payload = null
-          record_id = null
-          put_url = null
-          document.getElementById('reload').click()
-        }
-    })// End ajax
-  }); // reload()
-}  
 
 function makeCalendar(data){
   let people = []
@@ -296,8 +220,6 @@ function makeCalendar(data){
     eventOverlap: true,
     resourceLabelText: "People",
     select: function(info) {
-          // console.log(info.resource._resource.parentId)
-          console.log(info)
           $('.modal').modal('show');
           $('#modal_header').text("Create New Event")
           $('.modal').find('#starts-at').val(moment(info.startStr).utc());
@@ -369,11 +291,123 @@ function deleteEventClick(url){
         $('.modal').modal('hide');
         url = null
         document.getElementById('reload').click()
-      }
+      },
+      error: function(response){
+          alert('request failed');
+          $('.modal').modal('hide');
+          document.getElementById('reload').click()
+        }
     })// End ajax
 
   }); // End delete click
 }
+
+function saveEventClick(info)
+{
+  $('#save-event').click(function(e) {
+    // e.stopImmediatePropagation();
+    e.preventDefault() // Need this or otherwise it will do multiple inserts for some retarded reason
+    var name;
+    if(info.resource._resource.parentId === ""){
+      name = info.resource._resource.id
+    }else{
+      name = info.resource._resource.parentId;
+    }
+    var title = $('.modal').find('#title').val()
+    var from = moment($('.modal').find('#starts-at').val())
+    var to = moment($('.modal').find('#ends-at').val())
+    var post_url = "https://api.knack.com/v1/objects/object_6/records/";
+    var station = $("#modal-select").val()
+    if( typeof station === 'undefined' || station === null ){
+      alert("Please select a station")
+      return
+    }
+    var stationId = getStationId(station)
+
+    var location = localStorage.getItem('location')
+    var locationId = getStationId(location)
+
+    var payload = new Object()
+
+    var from_am_pm = from.utc().format("A")
+    var from_minute = from.utc().format("mm")
+    var from_hour = from.utc().format("hh")
+    var from_date = from.utc().format("MM/DD/YYYY")
+
+    var to_am_pm = to.utc().format("A")
+    var to_minute = to.utc().format("mm")
+    var to_hour = to.utc().format("hh")
+    var to_date = to.utc().format("MM/DD/YYYY")
+
+    payload.field_57 = name
+    payload.field_61 = title
+
+    payload.field_77 = [
+        {
+          "id":locationId,
+          "identifier":location
+        }
+    ]
+
+    payload.field_78 = [
+        {
+          "id":stationId,
+          "identifier":station
+        }
+    ]
+
+      payload.field_58 = {
+          am_pm:from_am_pm,
+          date:from_date,
+          hours:from_hour,
+          minutes:from_minute,
+          to:{
+            am_pm:to_am_pm,
+            date:to_date,
+            hours:to_hour,
+            minutes:to_minute,
+          }
+      }
+      
+      payload.field_67 = {
+          am_pm:from_am_pm,
+          date:from_date,
+          hours:from_hour,
+          minutes:from_minute,
+          to:{
+            am_pm:to_am_pm,
+            date:to_date,
+            hours:to_hour,
+            minutes:to_minute,
+          } // End to
+      } // End main object
+
+     $.ajax({
+        url: post_url,
+        type: "POST",
+        headers: {
+          "X-Knack-Application-ID": "5c93c4d50fbcdf5726ae5439",
+          "X-Knack-REST-API-Key": "e46f6190-4bfb-11e9-9d62-3b671224caf2",
+          "content-type": "application/json"
+        },
+        data: JSON.stringify(payload),
+        cache: false,
+        success:function(responseData) {
+          console.log("Record added!");
+          $('.modal').modal('hide');
+          payload = null
+          record_id = null
+          put_url = null
+          document.getElementById('reload').click()
+        },
+        error: function(response){
+          alert('request failed');
+          $('.modal').modal('hide');
+          document.getElementById('reload').click()
+        }
+    })// End ajax
+  }); // reload()
+}  
 
 function updateEventClick(info){
   $('#update-event').click(function(e) {
@@ -455,6 +489,11 @@ function updateEventClick(info){
           record_id = null
           put_url = null
           document.getElementById('reload').click()
+        },
+        error: function(response){
+          alert('request failed');
+          $('.modal').modal('hide');
+          document.getElementById('reload').click()
         }
     }); // End ajax
   }); // End Save click
@@ -527,6 +566,11 @@ function updateData(record_id, type, from, to, title){
           put_url = null
           record_id = null
           document.getElementById('reload').click()
+        },
+        error: function(response){
+          alert('request failed');
+          $('.modal').modal('hide');
+          document.getElementById('reload').click()
         }
     }); // End ajax
   } // End updateData
@@ -585,7 +629,6 @@ function updateData(record_id, type, from, to, title){
 
 function handleData(allRecordsForObject, start, sceneKey, viewKey) {
   let data = allRecordsForObject
-  // console.log(data)
   var emails =   [
     {
       "nmahalingam@freshideasfood.com": "Corporate",
@@ -607,12 +650,12 @@ function handleData(allRecordsForObject, start, sceneKey, viewKey) {
   var userEmail = "mmorgan@freshideasfood.com"
   var location  = emails[0][userEmail]
   data = filterLocation(location,data) // Will be set dynamically based on email
+  localStorage.setItem('location', location)
   setStations(userEmail)
   if (!Array.isArray(data) || !data.length) {
     alert("No data found for range");
     return
   }
-  console.log(data)
   makeCalendar(data)
 }
 
@@ -656,6 +699,7 @@ $(document).ready(function() {
 
     $('#main-select').change(function() {
       sessionStorage.setItem('selection', this.value); //$(this).val()
+      document.getElementById('reload').click()
     });
 
     $("#date-submit").click(function (e){
@@ -681,7 +725,6 @@ $(document).ready(function() {
     $("#modal-select").empty();
     var modal_select = document.getElementById("modal-select");
     for(let c of stations){
-      console.log(c)
       var main_select = document.getElementById("main-select");
       main_select.options[main_select.options.length] = new Option(c, c);
       modal_select.options[modal_select.options.length] = new Option(c, c);
@@ -741,7 +784,7 @@ $(document).ready(function() {
     <div id="scheduler"></div>
   </div>
 
-<div class="modal fade" tabindex="-1" role="dialog">
+<div class="modal fade" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header col-12" >
@@ -752,19 +795,19 @@ $(document).ready(function() {
                 <div class="row">
                     <div class="col-12">
                         <label class="col-4" for="title">Event title</label>
-                        <input type="text" name="title" id="title" />
+                        <input type="text" name="title" id="title" required/>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-12">
                         <label class="col-4" for="starts-at">Starts at</label>
-                        <input type="text" name="starts_at" id="starts-at" />
+                        <input type="text" name="starts_at" id="starts-at" required />
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-12">
                         <label class="col-4" for="ends-at">Ends at</label>
-                        <input type="text" name="ends_at" id="ends-at" />
+                        <input type="text" name="ends_at" id="ends-at" required />
                     </div>
                 </div>
                 <div class="row">
@@ -773,12 +816,12 @@ $(document).ready(function() {
                         <select name="selValue2" class="selectpicker" id="modal-select" required></select>
                     </div>
                 </div>
-<!--                 <div class="row">
+                <div class="row">
                     <div class="col-12">
                         <label class="col-4" for="actual-color">Color</label>
-                        <input type="text" name="actual_color" id="actual-color" />
+                        <input class="jscolor" id="actual-color" style="zIndex: 1080;" />
                     </div>
-                </div> -->
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" id='delete-event'>Delete</button>

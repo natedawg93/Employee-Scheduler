@@ -7,136 +7,29 @@
 
 <script>
   // var d = moment(moment("Sat May 04 2019 13:30:00 GMT-0500 (Central Daylight Time)").format('YYYY-MM-DDTHH:mm:ss'))
-//   var d = moment('Wed Jun 19 2019 04:23:00 GMT-0500 (Central Daylight Time)')
-//   var t = moment("2019-05-04T09:59:00.000Z")
-//   // d.setUTCHours(0,0,0,0);
-//   // d.set({hour:0,minute:0,second:0,millisecond:0})
-//   console.log(d)
-//   // console.log(d.format('LLLL'))
-//   // console.log("Second "+d.second())
-//   console.log("Minute "+d.utc().format('mm'))
-//   console.log("hour "+d.utc().format('hh'))
-//   console.log("Date "+d.utc().format('MM/DD/YYYY'))
-//   console.log("AM_PM "+d.utc().format('A'))
-//   // console.log("ISO "+moment.unix(d.valueOf()/1000).format('YYYY-MM-DDTHH:mm:ss'))
-//   // console.log("ISO "+d.format('YYYY-MM-DDTHH:mm:ss'))
-//   // console.log("Unix "+d.valueOf())
-//   // console.log("From Unix "+moment.unix(1556982000).format('MM-DD-YYYY HH:mm:ss'))
-//   // console.log((Number.parseInt(d.format('HH'))*60) + Number.parseInt(from_minute))
+  var from = moment('Mon Jul 01 2019 09::00 GMT+0000')
+  var to = moment('Mon Jul 01 2019 09::00 GMT+0000')
+  console.log(from.utc())
+  console.log(from.utc()._isValid)
+  var from_am_pm = from.utc().format("A")
+  var from_minute = from.utc().format("mm")
+  var from_hour = from.utc().format("hh")
+  var from_date = from.utc().format("MM/DD/YYYY")
 
-//   var from_am_pm = d.utc().format('A')
-//   var from_minute = d.utc().format('mm')
-//   var from_hour = d.utc().format('HH')
-//   var from_date = d.utc().format('MM/DD/YYYY')
-//   // var from_ISO = moment.unix(d.valueOf()/1000).format('YYYY-MM-DDTHH:mm:ss')
-//   // var from_ISO = d.utc().format('YYYY-MM-DDTHH:mm:ss')
+  var to_am_pm = to.utc().format("A")
+  var to_minute = to.utc().format("mm")
+  var to_hour = to.utc().format("hh")
+  var to_date = to.utc().format("MM/DD/YYYY")
 
-//   // var from_unix = d.valueOf()
-//   // var from_time_in_minutes = (Number.parseInt(from_hour)*60) + Number.parseInt(from_minute)
-//   // console.log(from_am_pm.toLowerCase())
+  console.log(from_am_pm)
+  console.log(from_minute)
+  console.log(from_hour)
+  console.log(from_date)
 
-//   var to_am_pm = t.utc().format('A')
-//   var to_minute = t.utc().format('mm')
-//   var to_hour = t.utc().format('HH')
-//   var to_date = t.utc().format('MM/DD/YYYY')
-//   // var to_ISO = t.utc().format('YYYY-MM-DDTHH:mm:ss')
-//   // var to_ISO = moment.unix(t.valueOf()/1000).format('YYYY-MM-DDTHH:mm:ss.000Z')
-//   // var to_unix = t.valueOf()
-//   // var to_time_in_minutes = (Number.parseInt(to_hour)*60) + Number.parseInt(to_minute)
-
-//   var payload = new Object()
-
-//   payload.field_58 = {
-//       am_pm:from_am_pm,
-//       date:from_date,
-//       hours:from_hour,
-//       minutes:from_minute,
-//       to:{
-//         am_pm:to_am_pm,
-//         date:to_date,
-//         hours:to_hour,
-//         minutes:to_minute,
-//       }
-//   }
-
-//   console.log(payload)
-
-//   var filters = {
-//   "match": "or",
-//   "rules": [
-//     {
-//         "field": "field_58",
-//         "operator": "is",
-//         "value": {
-//           "date": "05/04/2019"
-//       }
-//     },
-//       {
-//         "field": "field_58",
-//         "operator": "is",
-//         "value": {
-//           "date": "05/05/2019"
-//       }
-//     },
-//       {
-//         "field": "field_58",
-//         "operator": "is",
-//         "value": {
-//           "date": "05/06/2019"
-//       }
-//     },
-//       {
-//         "field": "field_58",
-//         "operator": "is",
-//         "value": {
-//           "date": "05/07/2019"
-//       }
-//     },
-//     {
-//         "field": "field_58",
-//         "operator": "is",
-//         "value": {
-//           "date": "05/08/2019"
-//       }
-//     },
-//       {
-//         "field": "field_58",
-//         "operator": "is",
-//         "value": {
-//           "date": "05/09/2019"
-//       }
-//     },
-//       {
-//         "field": "field_58",
-//         "operator": "is",
-//         "value": {
-//           "date": "05/10/2019"
-//       }
-//     },
-    
-//   ]
-// };
-
-// var f = new Object()
-// f.match = "or"
-// f.rules = new Array()
-// console.log(encodeURIComponent(JSON.stringify(filters)))
-// var start = moment("05/04/2019", 'MM/DD/YYYY')
-
-
-// for (let i of [0,1,2,3,4,5,6]){
-//   f.rules.push({
-//       "field": "field_58",
-//       "operator": "is",
-//       "value": {
-//             "date": moment(start, 'MM/DD/YYYY').add(i,'d').format('MM/DD/YYYY')
-//         }
-//     })
-// }
-
-// console.log(encodeURIComponent(JSON.stringify(f)))
-
-// https://dl.dropboxusercontent.com/s/kt55xo9jqnyjw3d/Names_emails_csv.csv?dl=1
+  console.log(to_am_pm)
+  console.log(to_minute)
+  console.log(to_hour)
+  console.log(to_date)
 
 </script>
 
@@ -144,15 +37,6 @@
 <body>
   <div id="one" width=100 height=100>a</div>
   <div id="two" width=100 height=100>b</div>
-
-  <script>
-    var color = '#'+Math.floor(Math.random()*16777215).toString(16)
-    var new_color = shadeColor(color, 2)
-    console.log(color)
-    console.log(new_color)
-    document.getElementById("one").style.color = color
-    document.getElementById("two").style.color = new_color
-  </script>
 </body>
 </html>
 
